@@ -48,5 +48,5 @@ double_wheel:
 {% include  feature_row id="weapon" type = "left" %}
 {% include  feature_row %}
 {% include  feature_row id="controller" type = "left" %}
-{% include  feature_row id="three_omni" type = "center" %}
 {% include  feature_row id="double_wheel" type = "right" %}
+{% include  feature_row id="three_omni" type = "center" %}
