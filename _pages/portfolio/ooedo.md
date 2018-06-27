@@ -4,6 +4,10 @@ layout: splash
 classes: wide
 permalink: /portfolio/ooedo/
 
+achievements:
+  - title: "この時得た能力"
+  excerpt: "PD制御，躍度最小，同構造型・異構造型マスタースレーブの制御"
+
 contest_rule:
   - image_path: /assets/images/portfolio/ooedo/rule_pic.jpg
     alt: "palceholder image 1"
@@ -43,6 +47,7 @@ double_wheel:
 ---
 
 
+{% include  feature_row id="achievements" type = "center" %}
 {% include  feature_row id="contest_rule" type = "left" %}
 {% include  feature_row id="creation" type = "right" %}
 {% include  feature_row id="weapon" type = "left" %}
