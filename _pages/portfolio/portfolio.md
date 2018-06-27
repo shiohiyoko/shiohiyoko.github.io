@@ -15,7 +15,7 @@ intro:
 feature_row1:
   - image_path: /assets/images/portfolio/ooedo.jpg
     alt: "placeholder image 1"
-    title: "大江戸ロボット忍法帖"
+    title: "大江戸ロボット忍法帖aa"
     excerpt: "説明文"
     url: "/portfolio/ooedo/"
     btn_label: "Read More"
