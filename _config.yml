@@ -40,7 +40,7 @@ author:
   avatar           : "/assets/images/bio-photo.jpg"
   bio              : "Student"
   location         : "Mie"
-  email            :
+  email            : h27i14@cc.suzuka-ct.ac.jp
   uri              :
   home             : # null (default), "absolute or relative url to link to author home"
   bitbucket        :
@@ -50,18 +50,18 @@ author:
   facebook         :
   foursquare       :
   github           : "shiohiyoko"
-  gitlab           :
+  gitlab           : "shiohiyoko"
   google_plus      :
   keybase          :
   instagram        :
   lastfm           :
-  linkedin         : 
+  linkedin         :
   pinterest        :
   soundcloud       :
   stackoverflow    : # "123456/username" (the last part of your profile url, e.g. https://stackoverflow.com/users/123456/username)
   steam            : # "steamId" (the last part of your profile url, e.g. https://steamcommunity.com/id/steamId/)
   tumblr           :
-  twitter          : 
+  twitter          :
   vine             :
   weibo            :
   xing             :
