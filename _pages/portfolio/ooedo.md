@@ -6,7 +6,7 @@ permalink: /portfolio/ooedo/
 
 achievements:
   - title: "この時得た能力"
-  excerpt: "PD制御，躍度最小，同構造型・異構造型マスタースレーブの制御"
+    excerpt: "PD制御，躍度最小，同構造型・異構造型マスタースレーブの制御"
 
 contest_rule:
   - image_path: /assets/images/portfolio/ooedo/rule_pic.jpg

@@ -8,7 +8,7 @@ permalink: /portfolio/newfront/
 
 achievements:
   - title: "この時得た能力"
-  excerpt: "組み込み系のプログラムの書き方, 18v駆動モーターの制御,回路のデバッグ方法,シリアル通信,PID制御"
+    excerpt: "組み込み系のプログラムの書き方, 18v駆動モーターの制御,回路のデバッグ方法,シリアル通信,PID制御"
 
 contest_rule:
   - image_path: /assets/images/portfolio/newfront/rule_pic.jpg
