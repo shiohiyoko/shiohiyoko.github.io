@@ -25,7 +25,7 @@ weapon:
 controller:
   - image_path: /assets/images/portfolio/ooedo/left_mouse.jpg
     alt: "placehoder image 4"
-    title: "コントローラああ"
+    title: "コントローラ"
     excerpt: "移動しながら２つの腕を動かすのはps3のコントローラーでは無理がありました．そこで，私達はマウスの横にジョイスティックを埋め込んだマウスとボタンを埋め込んだマウスを自作し，それらを使いました．"
 
 three_omni:
@@ -46,6 +46,7 @@ double_wheel:
 {% include  feature_row id="contest_rule" type = "left" %}
 {% include  feature_row id="creation" type = "right" %}
 {% include  feature_row id="weapon" type = "left" %}
+{% include  feature_row %}
 {% include  feature_row id="controller" type = "left" %}
-{% include  feature_row id="three_omni" type = "left" %}
-{% include  feature_row id="double_wheel" type = "left" %}
+{% include  feature_row id="three_omni" type = "center" %}
+{% include  feature_row id="double_wheel" type = "right" %}
