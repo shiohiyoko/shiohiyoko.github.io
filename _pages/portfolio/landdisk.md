@@ -6,7 +6,7 @@ permalink: /portfolio/landdisk/
 
 achievements:
   - title: "この時得た能力"
-    excerpt: "opencv for c#  速度制御"
+    excerpt: "opencv for c#,  速度制御"
 
 contest_rule:
   - image_path: /assets/images/portfolio/landdisk/rule_pic.jpg
@@ -17,6 +17,7 @@ contest_rule:
 #担当箇所
 ambush:
   - image_path: /assets/images/portfolio/landdisk/throwing_machine.jpg
+    image_path: /assets/images/portfolio/landdisk/fire.JPG
     alt: "placehoder image 3"
     title: "迎撃発射機構"
     excerpt: "相手のあっぱれ（フリスビーをすべてのテーブルに載せた状態）を防ぐため，相手の投げたフリスビーを撃ち落とす機構を作成しました．私は，この機構のフリスビーの新式，追跡，迎撃の制御を担当しました．"
