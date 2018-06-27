@@ -1,6 +1,6 @@
 ---
 title: 大江戸ロボット忍法帖
-layout: single
+layout: splash
 classes: wide
 permalink: /portfolio/ooedo/
 
