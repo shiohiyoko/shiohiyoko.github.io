@@ -13,7 +13,7 @@ intro:
   - excerpt: '鈴鹿工業高等専門学校 電子情報工学科'
 
 feature_row1:
-  - image_path: /assets/images/portfolio/ooedo/ooedo.jpg
+  - image_path: /assets/images/portfolio/ooedo/ooedo.png
     alt: "placeholder image 1"
     title: "大江戸ロボット忍法帖"
     excerpt: "2017年度に行われた高専ロボコンの競技"
