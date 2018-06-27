@@ -21,13 +21,13 @@ PID制御"
 
 #担当箇所
 wheels:
-  - image_path:  /assets/images/portfolio/ooedo/wheel.png
+  - image_path:  /assets/images/portfolio/newfront/wheel.png
     alt: "placehoder image 3"
     title: "走行系"
     excerpt: "このロボットにはメカな無ホイールという全方位移動できるタイヤを使用しました．モーターはブラシレスモータを用い，高速移動が可能になっています．"
 
 jackup:
-  - image_path: /assets/images/portfolio/ooedo/dsdd.png
+  - image_path: /assets/images/portfolio/newfront/dsdd.png
     alt: "placehoder image 4"
     title: "ジャッキアップ"
     excerpt: "このロボットは機体がサイズ制限ギリギリに設計されたため，スタート時はタイヤをロボットの内側に折りたたむ機能を取り付けました．これは角度センサを取り付けて，９０度毎で保持するように制御しました．"
@@ -35,6 +35,6 @@ jackup:
 
 
 {% include  feature_row id="contest_rule" type = "left" %}
-{% include  feature_row id="achievements" type = "right" %}
+{% include  feature_row id="achievements" type = "center" %}
 {% include  feature_row id="wheels" type = "left" %}
 {% include  feature_row id="jackup" type = "left" %}
