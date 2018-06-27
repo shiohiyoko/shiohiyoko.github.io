@@ -25,7 +25,7 @@ weapon:
 controller:
   - image_path: /assets/images/portfolio/ooedo/left_mouse.jpg
     alt: "placehoder image 4"
-    title: "コントローラ"
+    title: "コントローラああ"
     excerpt: "移動しながら２つの腕を動かすのはps3のコントローラーでは無理がありました．そこで，私達はマウスの横にジョイスティックを埋め込んだマウスとボタンを埋め込んだマウスを自作し，それらを使いました．"
 
 three_omni:
