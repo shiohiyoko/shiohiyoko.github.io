@@ -28,3 +28,5 @@ weapon:
 
 
 {% include  feature_row id="contest_rule" type = "left" %}
+{% include  feature_row id="creation" type = "right" %}
+{% include  feature_row id="weapon" type = "left" %}
