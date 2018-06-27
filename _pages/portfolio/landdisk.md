@@ -16,7 +16,7 @@ contest_rule:
 
 #担当箇所
 ambush:
-  - image_path: /assets/images/portfolio/landdisk/throwing_machine.jpg
+  - image_path: /assets/images/portfolio/landdisk/fire.JPG
   - image_path: /assets/images/portfolio/landdisk/throwing_machine.jpg
     alt: "placehoder image 3"
     title: "迎撃発射機構"
