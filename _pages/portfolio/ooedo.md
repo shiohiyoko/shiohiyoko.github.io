@@ -20,10 +20,11 @@ weapon:
   - image_path:  /assets/images/portfolio/ooedo/spikes.JPG
     alt: "placehoder image 3"
     title: "ひみつ道具"
-    excerpt: "ルール上，ひみつ道具はヤスリを使う必要がありましが，使えるヤスリの量に指定がありました．
+    excerpt: "ルール上，ひみつ道具はヤスリを使う必要がありましが，使えるヤスリの量に指定がありました．  
     なので，使うヤスリは少量で風船を割りやすいようなひみつ道具を作る必要がありました．そこで私はモーニングスターをイメージした腕の先端につける部品を作成しました．"
 
-
+controller:
+  - image_path: /assets/images/portfolio/ooedo/mouse_update.jpg
 
 ---
 
