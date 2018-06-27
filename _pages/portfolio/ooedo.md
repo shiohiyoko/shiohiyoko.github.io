@@ -25,10 +25,13 @@ weapon:
 
 controller:
   - image_path: /assets/images/portfolio/ooedo/mouse_update.jpg
-
+    alt: "placehoder image 4"
+    title: "コントローラ"
+    excerpt: ";alsk"
 ---
 
 
 {% include  feature_row id="contest_rule" type = "left" %}
 {% include  feature_row id="creation" type = "right" %}
 {% include  feature_row id="weapon" type = "left" %}
+{% include  feature_row id="controller" type = "left" %}
