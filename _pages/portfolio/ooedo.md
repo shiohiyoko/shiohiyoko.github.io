@@ -30,6 +30,16 @@ controller:
 
 three_omni:
   - image_path: /assets/images/portfolio/ooedo/three_omni.png
+    alt: "placehoder image 5"
+    title: "３輪オムニホイール"
+    excerpt: "私が担当したロボットの一つの走行系はオムニホイールを３つ使用したものです．これにより，全方位移動できるようになり，いろんな方向から攻撃ができるようになりました．"
+double_wheel:
+  - image_path:  /assets/images/portfolio/ooedo/double_wheel.png
+    alt: "placehoder image 6"
+    title: "2輪駆動"
+    excerpt: "私が担当したもうひとつの機体の走行系は，ラジコンに使われるタイヤを走行系に取り付け，２輪駆動にしたことでスピードが上がり，相手の本陣に早くたどり着くことが可能になりました．"
+
+
 ---
 
 
@@ -37,3 +47,5 @@ three_omni:
 {% include  feature_row id="creation" type = "right" %}
 {% include  feature_row id="weapon" type = "left" %}
 {% include  feature_row id="controller" type = "left" %}
+{% include  feature_row id="three_omni" type = "left" %}
+{% include  feature_row id="double_wheel" type = "left" %}
