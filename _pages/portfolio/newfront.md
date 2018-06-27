@@ -21,19 +21,20 @@ PID制御"
 
 #担当箇所
 wheels:
-  - image_path:  /assets/images/portfolio/ooedo/spikes.JPG
+  - image_path:  /assets/images/portfolio/ooedo/wheel.png
     alt: "placehoder image 3"
-    title: "ひみつ道具"
-    excerpt: "ルール上，ひみつ道具はヤスリを使う必要がありましが，使えるヤスリの量に指定がありました．なので，使うヤスリは少量で風船を割りやすいようなひみつ道具を作る必要がありました．そこで私はモーニングスターをイメージした腕の先端につける部品を作成しました．"
+    title: "走行系"
+    excerpt: "このロボットにはメカな無ホイールという全方位移動できるタイヤを使用しました．モーターはブラシレスモータを用い，高速移動が可能になっています．"
 
 jackup:
-  - image_path: /assets/images/portfolio/ooedo/left_mouse.jpg
+  - image_path: /assets/images/portfolio/ooedo/dsdd.png
     alt: "placehoder image 4"
-    title: "コントローラ"
-    excerpt: "移動しながら２つの腕を動かすのはps3のコントローラーでは無理がありました．そこで，私達はマウスの横にジョイスティックを埋め込んだマウスとボタンを埋め込んだマウスを自作し，それらを使いました．"
+    title: "ジャッキアップ"
+    excerpt: "このロボットは機体がサイズ制限ギリギリに設計されたため，スタート時はタイヤをロボットの内側に折りたたむ機能を取り付けました．これは角度センサを取り付けて，９０度毎で保持するように制御しました．"
 ---
 
 
 {% include  feature_row id="contest_rule" type = "left" %}
-{% include  feature_row id="creation" type = "right" %}
-{% include  feature_row id="weapon" type = "left" %}
+{% include  feature_row id="achievements" type = "right" %}
+{% include  feature_row id="wheels" type = "left" %}
+{% include  feature_row id="jackup" type = "left" %}
