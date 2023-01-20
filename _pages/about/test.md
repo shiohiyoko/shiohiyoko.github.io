@@ -2,7 +2,7 @@
 title: ロボット・ニューフロンティア
 layout: single
 classes: wide
-permalink: /aboutme/test/
+permalink: /about/test/
 
 
 
