@@ -4,7 +4,7 @@ layout: single
 classes: wide
 permalink: /about/test/
 
-
+  
 
 achievements:
   - title: "この時得た能力"
