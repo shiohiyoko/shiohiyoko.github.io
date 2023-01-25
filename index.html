@@ -76,7 +76,11 @@
       scene.add(leg4);
 
 
-      animate();
+      renderer.setAnimationLoop( function (time) {
+
+        animate(time);
+        renderer.render( scene, camera );
+      } );
 
 
       function init() {
@@ -286,12 +290,8 @@
       }
 
 
-      renderer.setAnimationLoop( function () {
-        animate();
-    renderer.render( scene, camera );
-    } );
-
       function animate(time) {
+        // requestAnimationFrame(animate);
 
         const start_angle_sholder = [-Math.PI/2, 0, Math.PI*1.2/2]
         const start_angle_elbow = [0, 0, -Math.PI*0.8/2]
@@ -351,6 +351,7 @@
 
 
         stats.update();
+
         control.update();
       }
 
