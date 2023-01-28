@@ -26,333 +26,330 @@
     </script>
 
     <script type="module">
-      import * as THREE from "three";
-      import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-      import Stats from "three/addons/libs/stats.module.js";
-      import { VRButton } from 'three/addons/webxr/VRButton.js';
-
-      let stats;
-
-      let camera, scene, renderer, control;
-      let pointLight;
-      
-      const cubeman = new THREE.Group();
-
-      init();
-      Createcubeman(cubeman);
-      const bar = new THREE.Mesh( new THREE.CylinderGeometry( 5, 5, 500, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-      bar.name ="bar";
-      bar.rotation.z = Math.PI/2;
-      scene.add(bar);
-      const weight = new THREE.Mesh( new THREE.CylinderGeometry( 50, 50, 10, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-      weight.name ="bar";
-      weight.position.y = 250;
-      bar.add(weight);
-
-      const weight2 = weight.clone();
-      weight2.position.y = -250;
-      bar.add(weight2);
-
-
-      //bench
-      const bench = new THREE.Mesh( new THREE.BoxGeometry( 50, 20, 300 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-      bench.name ="bench";
-      bench.position.set(0, -30,-230);
-      scene.add(bench);
-      const leg = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-      leg.name ="leg";
-      leg.position.set(-20, -50,-350);
-      scene.add(leg);
-      const leg2 = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-      leg2.name ="leg2";
-      leg2.position.set(20, -50,-350);
-      scene.add(leg2);
-
-      const leg3 = leg.clone();
-      leg3.position.z = -100;
-      scene.add(leg3);
-      const leg4 = leg2.clone();
-      leg4.position.z = -100;
-      scene.add(leg4);
-
-
-      renderer.setAnimationLoop( function (time) {
-
-        animate(time);
-        renderer.render( scene, camera );
-      } );
-
-
-      function init() {
-        const container = document.createElement("div");
-        document.body.appendChild(container);
-
-        camera = new THREE.PerspectiveCamera(
-          45,
-          window.innerWidth / window.innerHeight,
-          1,
-          2000
-        );
-        camera.position.set(0, 800, 800);
-
-        scene = new THREE.Scene();
-
-        // Grid
-
-        const helper = new THREE.GridHelper(1000, 40, 0x303030, 0x303030);
-        helper.position.y = -75;
-        scene.add(helper);
-
-        // Lights
-
-        scene.add(new THREE.AmbientLight(0x111111));
-
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.125);
-
-        directionalLight.position.x = Math.random() - 0.5;
-        directionalLight.position.y = Math.random() - 0.5;
-        directionalLight.position.z = Math.random() - 0.5;
-        directionalLight.position.normalize();
-
-        scene.add(directionalLight);
-
-        pointLight = new THREE.PointLight(0xffffff, 1);
-        scene.add(pointLight);
-
-        pointLight.add(
-          new THREE.Mesh(
-            new THREE.SphereGeometry(4, 8, 8),
-            new THREE.MeshBasicMaterial({ color: 0xffffff })
-          )
-        );
-
-        //
-
-        renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        container.appendChild(renderer.domElement);
-
-        control = new OrbitControls(camera, renderer.domElement);
-
-        stats = new Stats();
-        container.appendChild(stats.dom);
-
-        //web xr
-        document.body.appendChild( VRButton.createButton( renderer ) );
-        renderer.xr.enabled = true;
-        //
-
-        window.addEventListener("resize", onWindowResize);
-      }
-
-      function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-      
-      // function to create the cubman
-      function Createcubeman(cubeman){
-
-        const mesh = new THREE.MeshNormalMaterial({ flatShading: false });
-
-        //body
-        const butt = new THREE.Mesh( new THREE.BoxGeometry(50, 20, 20), mesh);
-        butt.name = "butt";
-        butt.position.y = 195;
-        cubeman.add(butt);
-        
-        const belly_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        belly_joint.name ="belly_joint";
-        belly_joint.position.y = 13;
-        butt.add(belly_joint);          
-
-        const stomach = new THREE.Mesh( new THREE.BoxGeometry(45, 50, 20), mesh);
-        stomach.name = "stomach";
-        stomach.position.y = 27;
-        belly_joint.add(stomach);
-        
-        const chest_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        chest_joint.name ="chest_joint";
-        chest_joint.position.y = 27;
-        stomach.add(chest_joint);        
-
-        const chest = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 20), mesh);
-        chest.name = "chest";
-        chest.position.y = 27;
-        chest_joint.add(chest);
-        
-        const neck = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        neck.name ="neck";
-        neck.position.y = 27;
-        chest.add(neck);        
-
-        const head = new THREE.Mesh( new THREE.BoxGeometry(30, 30, 30), mesh);
-        head.name = "head";
-        head.position.y = 17;
-        neck.add(head);
-        
-
-        // legs 
-        const thigh_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        thigh_joint.name ="left_thigh_joint";
-        thigh_joint.position.x = 15;
-        thigh_joint.position.y = -13;
-        butt.add(thigh_joint);          
-
-        const upper_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
-        upper_leg.name = "left_upper_leg";
-        upper_leg.position.y = -43;
-        thigh_joint.add(upper_leg);
-
-        const knee = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        knee.name ="left_knee_joint";
-        knee.position.y = -43;
-        upper_leg.add(knee);
-
-        const lower_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
-        lower_leg.name ="left_lower_leg";
-        lower_leg.position.y = -43;
-        knee.add(lower_leg);  
-        
-        const ankle = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        ankle.name ="left_ankle_joint";
-        ankle.position.y = -43;
-        lower_leg.add(ankle);      
-        
-        const foot = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 60), mesh);
-        foot.name = "left_foot";
-        foot.position.y = -13;
-        foot.position.z = 15;
-        ankle.add(foot);
-
-        const thigh_joint2 = thigh_joint.clone();
-        thigh_joint2.getObjectByName("left_thigh_joint").name = "right_thigh_joint";
-        thigh_joint2.getObjectByName("left_upper_leg").name = "right_upper_leg";
-        thigh_joint2.getObjectByName("left_knee_joint").name = "right_knee_joint";
-        thigh_joint2.getObjectByName("left_lower_leg").name = "right_lower_leg";
-        thigh_joint2.getObjectByName("left_ankle_joint").name = "right_ankle_joint";
-        thigh_joint2.getObjectByName("left_foot").name = "right_foot";
-        
-        thigh_joint2.position.x = -15;
-        butt.add(thigh_joint2);
-
-        //arms
-
-        const sholder = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        sholder.name ="left_sholder";
-        sholder.position.x = 27;
-        sholder.position.y = 23;
-        chest.add(sholder);     
-
-        const upper_arm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
-        upper_arm.name ="left_upper_arm";
-        upper_arm.position.x = 10;
-        upper_arm.position.y = -27;
-        sholder.add(upper_arm);     
-
-        const elbow = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        elbow.name ="left_elbow";
-        elbow.position.y = -23;
-        upper_arm.add(elbow);     
-
-        const forearm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
-        forearm.name ="left_forearm";
-        forearm.position.y = -30;
-        elbow.add(forearm);
-
-        const whrist = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-        whrist.name ="left_whrist";
-        whrist.position.y = -23;
-        forearm.add(whrist);
-
-        const hand = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 20), mesh);
-        hand.name = "left_hand";
-        hand.position.y = -15;
-        whrist.add(hand);        
-        
-        const sholder2 = sholder.clone();
-        sholder2.position.x = -27;
-        sholder2.children[0].position.x = -10;
-        sholder2.getObjectByName("left_sholder").name = "right_sholder";
-        sholder2.getObjectByName("left_upper_arm").name = "right_upper_arm";
-        sholder2.getObjectByName("left_elbow").name = "right_elbow";
-        sholder2.getObjectByName("left_forearm").name = "right_forearm";
-        sholder2.getObjectByName("left_whrist").name = "right_whrist";
-        sholder2.getObjectByName("left_hand").name = "right_hand";
-
-
-        chest.add(sholder2);
-
-        scene.add(cubeman);
-      }
-
-
-      function animate(time) {
-        // requestAnimationFrame(animate);
-
-        const start_angle_sholder = [-Math.PI/2, 0, Math.PI*1.2/2]
-        const start_angle_elbow = [0, 0, -Math.PI*0.8/2]
-        const start_angle_whrist = [0, 0, -Math.PI/6]
-        
-        // const start_angle_sholder = [-Math.PI/2, 0, Math.PI/6]
-        // const start_angle_elbow = [0,0, 0]
-
-        const end_angle_sholder = [-Math.PI/2, 0, Math.PI*1.2/6]
-        const end_angle_elbow = [0,0, 0]
-        const end_angle_whrist = [0, 0, -Math.PI/5]
-        
-        const sholder_diff = (end_angle_sholder[2] + start_angle_sholder[2])/2;
-        const elbow_diff = (end_angle_elbow[2] + start_angle_elbow[2])/2;
-        const whrist_diff = (end_angle_whrist[2] + start_angle_whrist[2])/2;
-        
-
-        const flag = [1, -1]
-
-        const t = time*0.05;
-        cubeman.rotation.x = -Math.PI/2;
-        
-        // initial position
-        scene.getObjectByName("left_knee_joint").rotation.x = Math.PI/2;
-        scene.getObjectByName("right_knee_joint").rotation.x = Math.PI/2;
-
-        scene.getObjectByName("left_thigh_joint").rotation.z = Math.PI/6;
-        scene.getObjectByName("right_thigh_joint").rotation.z = -Math.PI/6;
-
-        scene.getObjectByName("left_sholder").rotation.set(start_angle_sholder[0], start_angle_sholder[1], flag[0]*sholder_diff);
-        scene.getObjectByName("right_sholder").rotation.set(start_angle_sholder[0], start_angle_sholder[1], flag[1]*sholder_diff);
-
-        scene.getObjectByName("left_elbow").rotation.set(start_angle_elbow[0], start_angle_elbow[1], flag[0]*elbow_diff);
-        scene.getObjectByName("right_elbow").rotation.set(start_angle_elbow[0], start_angle_elbow[1], flag[1]*elbow_diff);
-        
-        scene.getObjectByName("left_whrist").rotation.set(start_angle_whrist[0], start_angle_whrist[1], flag[0]*whrist_diff);
-        scene.getObjectByName("right_whrist").rotation.set(start_angle_whrist[0], start_angle_whrist[1], flag[1]*whrist_diff);
-        
-        
-         
-
-        // scene.getObjectByName("left_whrist").rotation.z = Math.PI/180*t;
-        //movement
-        const sholder = [scene.getObjectByName("left_sholder"), scene.getObjectByName("right_sholder")]
-        const elbow = [scene.getObjectByName("left_elbow"), scene.getObjectByName("right_elbow")]
-        const whrist = [scene.getObjectByName("left_whrist"), scene.getObjectByName("right_whrist")]
-
-        for(let i = 0; i <2; i++) {
-          sholder[i].rotation.z -= (start_angle_sholder[2] - sholder_diff) * Math.sin(Math.PI/180*t) * flag[i];
-          elbow[i].rotation.z -= (start_angle_elbow[2] - elbow_diff) * Math.sin(Math.PI/180*t) * flag[i];
-          whrist[i].rotation.z -= (start_angle_whrist[2] - whrist_diff) * Math.sin(Math.PI/180*t) * flag[i];
-        }
-
-
-        var hand_pos = scene.getObjectByName("left_hand").getWorldPosition(bar.position);
-        bar.position.x = 0;
-
-
-        stats.update();
-
-        control.update();
+		import * as THREE from "three";
+		import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+		import Stats from "three/addons/libs/stats.module.js";
+		import { VRButton } from 'three/addons/webxr/VRButton.js';
+
+		let stats;
+
+		let camera, scene, renderer, control;
+		let pointLight;
+		
+		const cubeman = new THREE.Group();
+
+		// main functions
+		init();
+		Createcubeman(cubeman);
+		CreateEquipment();
+
+		renderer.setAnimationLoop( function (time) {
+
+			animate(time);
+			renderer.render( scene, camera );
+		} );
+
+
+		function init() {
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+
+			camera = new THREE.PerspectiveCamera(
+				45,
+				window.innerWidth / window.innerHeight,
+				1,
+				2000
+			);
+			camera.position.set(0, 800, 800);
+
+			scene = new THREE.Scene();
+
+			// Grid
+
+			const helper = new THREE.GridHelper(1000, 40, 0x303030, 0x303030);
+			helper.position.y = -75;
+			scene.add(helper);
+
+			// Lights
+
+			scene.add(new THREE.AmbientLight(0x111111));
+
+			const directionalLight = new THREE.DirectionalLight(0xffffff, 0.125);
+
+			directionalLight.position.x = Math.random() - 0.5;
+			directionalLight.position.y = Math.random() - 0.5;
+			directionalLight.position.z = Math.random() - 0.5;
+			directionalLight.position.normalize();
+
+			scene.add(directionalLight);
+
+			pointLight = new THREE.PointLight(0xffffff, 1);
+			scene.add(pointLight);
+
+			// pointLight.add(
+			// 	new THREE.Mesh(
+			// 		new THREE.SphereGeometry(4, 8, 8),
+			// 		new THREE.MeshBasicMaterial({ color: 0xffffff })
+			// 	)
+			// );
+
+			//
+
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			container.appendChild(renderer.domElement);
+
+			control = new OrbitControls(camera, renderer.domElement);
+
+			stats = new Stats();
+			container.appendChild(stats.dom);
+
+			//web xr
+			document.body.appendChild( VRButton.createButton( renderer ) );
+			renderer.xr.enabled = true;
+			//
+
+			window.addEventListener("resize", onWindowResize);
+		}
+
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+		
+		// function to create the cubman
+		function Createcubeman(cubeman){
+
+			const mesh = new THREE.MeshNormalMaterial({ flatShading: false });
+
+			//body
+			const butt = new THREE.Mesh( new THREE.BoxGeometry(50, 20, 20), mesh);
+			butt.name = "butt";
+			butt.position.y = 195;
+			cubeman.add(butt);
+			
+			const belly_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			belly_joint.name ="belly_joint";
+			belly_joint.position.y = 13;
+			butt.add(belly_joint);          
+
+			const stomach = new THREE.Mesh( new THREE.BoxGeometry(45, 50, 20), mesh);
+			stomach.name = "stomach";
+			stomach.position.y = 27;
+			belly_joint.add(stomach);
+			
+			const chest_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			chest_joint.name ="chest_joint";
+			chest_joint.position.y = 27;
+			stomach.add(chest_joint);        
+
+			const chest = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 20), mesh);
+			chest.name = "chest";
+			chest.position.y = 27;
+			chest_joint.add(chest);
+			
+			const neck = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			neck.name ="neck";
+			neck.position.y = 27;
+			chest.add(neck);        
+
+			const head = new THREE.Mesh( new THREE.BoxGeometry(30, 30, 30), mesh);
+			head.name = "head";
+			head.position.y = 17;
+			neck.add(head);
+			
+
+			// legs 
+			const thigh_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			thigh_joint.name ="left_thigh_joint";
+			thigh_joint.position.x = 15;
+			thigh_joint.position.y = -13;
+			butt.add(thigh_joint);          
+
+			const upper_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
+			upper_leg.name = "left_upper_leg";
+			upper_leg.position.y = -43;
+			thigh_joint.add(upper_leg);
+
+			const knee = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			knee.name ="left_knee_joint";
+			knee.position.y = -43;
+			upper_leg.add(knee);
+
+			const lower_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
+			lower_leg.name ="left_lower_leg";
+			lower_leg.position.y = -43;
+			knee.add(lower_leg);  
+			
+			const ankle = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			ankle.name ="left_ankle_joint";
+			ankle.position.y = -43;
+			lower_leg.add(ankle);      
+			
+			const foot = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 60), mesh);
+			foot.name = "left_foot";
+			foot.position.y = -13;
+			foot.position.z = 15;
+			ankle.add(foot);
+
+			const thigh_joint2 = thigh_joint.clone();
+			thigh_joint2.getObjectByName("left_thigh_joint").name = "right_thigh_joint";
+			thigh_joint2.getObjectByName("left_upper_leg").name = "right_upper_leg";
+			thigh_joint2.getObjectByName("left_knee_joint").name = "right_knee_joint";
+			thigh_joint2.getObjectByName("left_lower_leg").name = "right_lower_leg";
+			thigh_joint2.getObjectByName("left_ankle_joint").name = "right_ankle_joint";
+			thigh_joint2.getObjectByName("left_foot").name = "right_foot";
+			
+			thigh_joint2.position.x = -15;
+			butt.add(thigh_joint2);
+
+			//arms
+			const sholder = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			sholder.name ="left_sholder";
+			sholder.position.x = 27;
+			sholder.position.y = 23;
+			chest.add(sholder);     
+
+			const upper_arm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
+			upper_arm.name ="left_upper_arm";
+			upper_arm.position.x = 10;
+			upper_arm.position.y = -27;
+			sholder.add(upper_arm);     
+
+			const elbow = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			elbow.name ="left_elbow";
+			elbow.position.y = -23;
+			upper_arm.add(elbow);     
+
+			const forearm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
+			forearm.name ="left_forearm";
+			forearm.position.y = -30;
+			elbow.add(forearm);
+
+			const whrist = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
+			whrist.name ="left_whrist";
+			whrist.position.y = -23;
+			forearm.add(whrist);
+
+			const hand = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 20), mesh);
+			hand.name = "left_hand";
+			hand.position.y = -15;
+			whrist.add(hand);        
+			
+			const sholder2 = sholder.clone();
+			sholder2.position.x = -27;
+			sholder2.children[0].position.x = -10;
+			sholder2.getObjectByName("left_sholder").name = "right_sholder";
+			sholder2.getObjectByName("left_upper_arm").name = "right_upper_arm";
+			sholder2.getObjectByName("left_elbow").name = "right_elbow";
+			sholder2.getObjectByName("left_forearm").name = "right_forearm";
+			sholder2.getObjectByName("left_whrist").name = "right_whrist";
+			sholder2.getObjectByName("left_hand").name = "right_hand";
+
+			chest.add(sholder2);
+
+			scene.add(cubeman);
+		}
+
+		// Function to create weights and bench
+		function CreateEquipment(){
+			const bar = new THREE.Mesh( new THREE.CylinderGeometry( 5, 5, 500, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
+			bar.name ="bar";
+			bar.rotation.z = Math.PI/2;
+			scene.add(bar);
+			const weight = new THREE.Mesh( new THREE.CylinderGeometry( 50, 50, 10, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
+			weight.name ="bar";
+			weight.position.y = 250;
+			bar.add(weight);
+
+			const weight2 = weight.clone();
+			weight2.position.y = -250;
+			bar.add(weight2);
+
+
+			//bench
+			const bench = new THREE.Mesh( new THREE.BoxGeometry( 50, 20, 300 ), new THREE.MeshNormalMaterial({ flatShading: false }));
+			bench.name ="bench";
+			bench.position.set(0, -30,-230);
+			scene.add(bench);
+			const leg = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
+			leg.name ="leg";
+			leg.position.set(-20, -50,-350);
+			scene.add(leg);
+			const leg2 = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
+			leg2.name ="leg2";
+			leg2.position.set(20, -50,-350);
+			scene.add(leg2);
+
+			const leg3 = leg.clone();
+			leg3.position.z = -100;
+			scene.add(leg3);
+			const leg4 = leg2.clone();
+			leg4.position.z = -100;
+			scene.add(leg4);
+		}
+		
+		// cubeman initial position
+		function InitialPos(){
+
+			scene.getObjectByName("left_knee_joint").rotation.x = Math.PI/2;
+			scene.getObjectByName("right_knee_joint").rotation.x = Math.PI/2;
+
+			scene.getObjectByName("left_thigh_joint").rotation.z = Math.PI/6;
+			scene.getObjectByName("right_thigh_joint").rotation.z = -Math.PI/6;
+
+			scene.getObjectByName("left_sholder").rotation.set(-Math.PI/2, 0, 0);
+			scene.getObjectByName("right_sholder").rotation.set(-Math.PI/2, 0, 0);
+
+		}
+		
+		// animation generator
+		function animate(time) {
+			// requestAnimationFrame(animate);
+			const t = time*0.01;
+			let L1 = 50
+			let L2 = 50
+			let theta1, theta2;
+			let y = 60;
+			let x = 40+ 40*Math.sin(t);
+
+			// inverse kinematics
+			let delta1 = (x*x + y*y + L1*L1 - L2*L2)/(2*L1*Math.sqrt(x*x + y*y));
+			theta1 = Math.acos(delta1)+Math.atan(y/x);
+
+			let delta2 = (y-L1*Math.sin(theta1))/(x-L1*Math.cos(theta1));
+			theta2 = Math.atan(delta2)-theta1;
+
+			//movement
+			const sholder = [scene.getObjectByName("left_sholder"), scene.getObjectByName("right_sholder")]
+			const elbow = [scene.getObjectByName("left_elbow"), scene.getObjectByName("right_elbow")]
+			const whrist = [scene.getObjectByName("left_whrist"), scene.getObjectByName("right_whrist")]
+
+			// set the position
+			InitialPos();
+			sholder[0].rotation.z = theta1;
+			elbow[0].rotation.z = theta2;
+
+			sholder[1].rotation.z = -theta1;
+			elbow[1].rotation.z = -theta2;
+
+			let quat = new THREE.Quaternion();
+			whrist[0].getWorldQuaternion(quat);
+			let z = Math.atan( 2*(quat.x*quat.y + quat.z*quat.w) / (quat.x*quat.x - quat.y*quat.y - quat.z*quat.z + quat.w*quat.w))
+			whrist[0].rotation.z += z;
+			whrist[1].rotation.z -= z;
+
+			cubeman.rotation.x = -Math.PI/2;
+			
+			// bar movement
+			var hand_pos = scene.getObjectByName("left_hand").getWorldPosition(scene.getObjectByName("bar").position);
+			scene.getObjectByName("bar").position.x = 0;
+
+			stats.update();
+			control.update();
       }
 
     </script>
