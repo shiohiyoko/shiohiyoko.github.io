@@ -1,357 +1,319 @@
+
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-        <style>
-            body {
-              margin: 0px;
-              overflow: hidden;
-            }
-          </style>
-	</head>
-  <body>
 
-    <script
-      async
-      src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
-    ></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
-          "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
-        }
-      }
+<head>
+	<title>three.js webgl - buffergeometry - particles</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<style>
+		body {
+			margin: 0px;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+
+    <div id="container"></div>
+
+    <script id="histvertexShader" type="x-shader/x-vertex">
+		uniform float time;
+		varying vec2 vUv;
+
+		void main()
+		{
+			vUv = uv;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4 (position, 1.0);
+		}
     </script>
 
-    <script type="module">
-		import * as THREE from "three";
-		import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-		import Stats from "three/addons/libs/stats.module.js";
-		import { VRButton } from 'three/addons/webxr/VRButton.js';
+    <script id="histfragmentShader" type="x-shader/x-fragment">
+      	uniform float time;
+		varying vec2 vUv;
+		uniform sampler2D tex;
 
-		let stats;
+		float getcolor(float thres, float uvy){
+			if(thres < uvy)
+				return 0.0;
+			else
+				return 1.0;
+		}
 
-		let camera, scene, renderer, control;
-		let pointLight;
+		void main()
+		{
+			vec3 threshold = texture2D(tex, vUv).rgb;
+			vec4 color = vec4(1.0,1.0,1.0,1.0);
+
+			if(threshold.x < vUv.x)
+				color.x = 0.0;
+			if(threshold.y < vUv.x)
+				color.y = 0.0;
+			if(threshold.z < vUv.x)
+				color.z = 0.0;
+			
+			if(threshold.x < vUv.x && threshold.y < vUv.x && threshold.z < vUv.x)
+				discard;
+
+			gl_FragColor = color;
 		
-		const cubeman = new THREE.Group();
-
-		// main functions
-		init();
-		Createcubeman(cubeman);
-		CreateEquipment();
-
-		renderer.setAnimationLoop( function (time) {
-
-			animate(time);
-			renderer.render( scene, camera );
-		} );
-
-
-		function init() {
-			const container = document.createElement("div");
-			document.body.appendChild(container);
-
-			camera = new THREE.PerspectiveCamera(
-				45,
-				window.innerWidth / window.innerHeight,
-				1,
-				2000
-			);
-			camera.position.set(0, 800, 800);
-
-			scene = new THREE.Scene();
-
-			// Grid
-
-			const helper = new THREE.GridHelper(1000, 40, 0x303030, 0x303030);
-			helper.position.y = -75;
-			scene.add(helper);
-
-			// Lights
-
-			scene.add(new THREE.AmbientLight(0x111111));
-
-			const directionalLight = new THREE.DirectionalLight(0xffffff, 0.125);
-
-			directionalLight.position.x = Math.random() - 0.5;
-			directionalLight.position.y = Math.random() - 0.5;
-			directionalLight.position.z = Math.random() - 0.5;
-			directionalLight.position.normalize();
-
-			scene.add(directionalLight);
-
-			pointLight = new THREE.PointLight(0xffffff, 1);
-			scene.add(pointLight);
-
-			// pointLight.add(
-			// 	new THREE.Mesh(
-			// 		new THREE.SphereGeometry(4, 8, 8),
-			// 		new THREE.MeshBasicMaterial({ color: 0xffffff })
-			// 	)
-			// );
-
-			//
-
-			renderer = new THREE.WebGLRenderer({ antialias: true });
-			renderer.setPixelRatio(window.devicePixelRatio);
-			renderer.setSize(window.innerWidth, window.innerHeight);
-			container.appendChild(renderer.domElement);
-
-			control = new OrbitControls(camera, renderer.domElement);
-
-			stats = new Stats();
-			container.appendChild(stats.dom);
-
-			//web xr
-			document.body.appendChild( VRButton.createButton( renderer ) );
-			renderer.xr.enabled = true;
-			//
-
-			window.addEventListener("resize", onWindowResize);
 		}
-
-		function onWindowResize() {
-			camera.aspect = window.innerWidth / window.innerHeight;
-			camera.updateProjectionMatrix();
-
-			renderer.setSize(window.innerWidth, window.innerHeight);
-		}
-		
-		// function to create the cubman
-		function Createcubeman(cubeman){
-
-			const mesh = new THREE.MeshNormalMaterial({ flatShading: false });
-
-			//body
-			const butt = new THREE.Mesh( new THREE.BoxGeometry(50, 20, 20), mesh);
-			butt.name = "butt";
-			butt.position.y = 195;
-			cubeman.add(butt);
-			
-			const belly_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			belly_joint.name ="belly_joint";
-			belly_joint.position.y = 13;
-			butt.add(belly_joint);          
-
-			const stomach = new THREE.Mesh( new THREE.BoxGeometry(45, 50, 20), mesh);
-			stomach.name = "stomach";
-			stomach.position.y = 27;
-			belly_joint.add(stomach);
-			
-			const chest_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			chest_joint.name ="chest_joint";
-			chest_joint.position.y = 27;
-			stomach.add(chest_joint);        
-
-			const chest = new THREE.Mesh( new THREE.BoxGeometry(50, 50, 20), mesh);
-			chest.name = "chest";
-			chest.position.y = 27;
-			chest_joint.add(chest);
-			
-			const neck = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			neck.name ="neck";
-			neck.position.y = 27;
-			chest.add(neck);        
-
-			const head = new THREE.Mesh( new THREE.BoxGeometry(30, 30, 30), mesh);
-			head.name = "head";
-			head.position.y = 17;
-			neck.add(head);
-			
-
-			// legs 
-			const thigh_joint = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			thigh_joint.name ="left_thigh_joint";
-			thigh_joint.position.x = 15;
-			thigh_joint.position.y = -13;
-			butt.add(thigh_joint);          
-
-			const upper_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
-			upper_leg.name = "left_upper_leg";
-			upper_leg.position.y = -43;
-			thigh_joint.add(upper_leg);
-
-			const knee = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			knee.name ="left_knee_joint";
-			knee.position.y = -43;
-			upper_leg.add(knee);
-
-			const lower_leg = new THREE.Mesh( new THREE.BoxGeometry(20, 80, 20), mesh);
-			lower_leg.name ="left_lower_leg";
-			lower_leg.position.y = -43;
-			knee.add(lower_leg);  
-			
-			const ankle = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			ankle.name ="left_ankle_joint";
-			ankle.position.y = -43;
-			lower_leg.add(ankle);      
-			
-			const foot = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 60), mesh);
-			foot.name = "left_foot";
-			foot.position.y = -13;
-			foot.position.z = 15;
-			ankle.add(foot);
-
-			const thigh_joint2 = thigh_joint.clone();
-			thigh_joint2.getObjectByName("left_thigh_joint").name = "right_thigh_joint";
-			thigh_joint2.getObjectByName("left_upper_leg").name = "right_upper_leg";
-			thigh_joint2.getObjectByName("left_knee_joint").name = "right_knee_joint";
-			thigh_joint2.getObjectByName("left_lower_leg").name = "right_lower_leg";
-			thigh_joint2.getObjectByName("left_ankle_joint").name = "right_ankle_joint";
-			thigh_joint2.getObjectByName("left_foot").name = "right_foot";
-			
-			thigh_joint2.position.x = -15;
-			butt.add(thigh_joint2);
-
-			//arms
-			const sholder = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			sholder.name ="left_sholder";
-			sholder.position.x = 27;
-			sholder.position.y = 23;
-			chest.add(sholder);     
-
-			const upper_arm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
-			upper_arm.name ="left_upper_arm";
-			upper_arm.position.x = 10;
-			upper_arm.position.y = -27;
-			sholder.add(upper_arm);     
-
-			const elbow = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			elbow.name ="left_elbow";
-			elbow.position.y = -23;
-			upper_arm.add(elbow);     
-
-			const forearm = new THREE.Mesh( new THREE.BoxGeometry(15, 50, 15), mesh);
-			forearm.name ="left_forearm";
-			forearm.position.y = -30;
-			elbow.add(forearm);
-
-			const whrist = new THREE.Mesh( new THREE.SphereGeometry(5, 5, 5), mesh);
-			whrist.name ="left_whrist";
-			whrist.position.y = -23;
-			forearm.add(whrist);
-
-			const hand = new THREE.Mesh( new THREE.BoxGeometry(20, 20, 20), mesh);
-			hand.name = "left_hand";
-			hand.position.y = -15;
-			whrist.add(hand);        
-			
-			const sholder2 = sholder.clone();
-			sholder2.position.x = -27;
-			sholder2.children[0].position.x = -10;
-			sholder2.getObjectByName("left_sholder").name = "right_sholder";
-			sholder2.getObjectByName("left_upper_arm").name = "right_upper_arm";
-			sholder2.getObjectByName("left_elbow").name = "right_elbow";
-			sholder2.getObjectByName("left_forearm").name = "right_forearm";
-			sholder2.getObjectByName("left_whrist").name = "right_whrist";
-			sholder2.getObjectByName("left_hand").name = "right_hand";
-
-			chest.add(sholder2);
-
-			scene.add(cubeman);
-		}
-
-		// Function to create weights and bench
-		function CreateEquipment(){
-			const bar = new THREE.Mesh( new THREE.CylinderGeometry( 5, 5, 500, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-			bar.name ="bar";
-			bar.rotation.z = Math.PI/2;
-			scene.add(bar);
-			const weight = new THREE.Mesh( new THREE.CylinderGeometry( 50, 50, 10, 32 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-			weight.name ="bar";
-			weight.position.y = 250;
-			bar.add(weight);
-
-			const weight2 = weight.clone();
-			weight2.position.y = -250;
-			bar.add(weight2);
-
-
-			//bench
-			const bench = new THREE.Mesh( new THREE.BoxGeometry( 50, 20, 300 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-			bench.name ="bench";
-			bench.position.set(0, -30,-230);
-			scene.add(bench);
-			const leg = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-			leg.name ="leg";
-			leg.position.set(-20, -50,-350);
-			scene.add(leg);
-			const leg2 = new THREE.Mesh( new THREE.BoxGeometry( 10, 50, 10 ), new THREE.MeshNormalMaterial({ flatShading: false }));
-			leg2.name ="leg2";
-			leg2.position.set(20, -50,-350);
-			scene.add(leg2);
-
-			const leg3 = leg.clone();
-			leg3.position.z = -100;
-			scene.add(leg3);
-			const leg4 = leg2.clone();
-			leg4.position.z = -100;
-			scene.add(leg4);
-		}
-		
-		// cubeman initial position
-		function InitialPos(){
-
-			scene.getObjectByName("left_knee_joint").rotation.x = Math.PI/2;
-			scene.getObjectByName("right_knee_joint").rotation.x = Math.PI/2;
-
-			scene.getObjectByName("left_thigh_joint").rotation.z = Math.PI/6;
-			scene.getObjectByName("right_thigh_joint").rotation.z = -Math.PI/6;
-
-			scene.getObjectByName("left_sholder").rotation.set(-Math.PI/2, 0, 0);
-			scene.getObjectByName("right_sholder").rotation.set(-Math.PI/2, 0, 0);
-
-		}
-		
-		// animation generator
-		function animate(time) {
-			// requestAnimationFrame(animate);
-			const t = time*0.01;
-			let L1 = 50
-			let L2 = 50
-			let theta1, theta2;
-			let y = 60;
-			let x = 40+ 40*Math.sin(t);
-
-			// inverse kinematics
-			let delta1 = (x*x + y*y + L1*L1 - L2*L2)/(2*L1*Math.sqrt(x*x + y*y));
-			theta1 = Math.acos(delta1)+Math.atan(y/x);
-
-			let delta2 = (y-L1*Math.sin(theta1))/(x-L1*Math.cos(theta1));
-			theta2 = Math.atan(delta2)-theta1;
-
-			//movement
-			const sholder = [scene.getObjectByName("left_sholder"), scene.getObjectByName("right_sholder")]
-			const elbow = [scene.getObjectByName("left_elbow"), scene.getObjectByName("right_elbow")]
-			const whrist = [scene.getObjectByName("left_whrist"), scene.getObjectByName("right_whrist")]
-
-			// set the position
-			InitialPos();
-			sholder[0].rotation.z = theta1;
-			elbow[0].rotation.z = theta2;
-
-			sholder[1].rotation.z = -theta1;
-			elbow[1].rotation.z = -theta2;
-
-			let quat = new THREE.Quaternion();
-			whrist[0].getWorldQuaternion(quat);
-			let z = Math.atan( 2*(quat.x*quat.y + quat.z*quat.w) / (quat.x*quat.x - quat.y*quat.y - quat.z*quat.z + quat.w*quat.w))
-			whrist[0].rotation.z += z;
-			whrist[1].rotation.z -= z;
-
-			cubeman.rotation.x = -Math.PI/2;
-			
-			// bar movement
-			var hand_pos = scene.getObjectByName("left_hand").getWorldPosition(scene.getObjectByName("bar").position);
-			scene.getObjectByName("bar").position.x = 0;
-
-			stats.update();
-			control.update();
-      }
-
     </script>
-  </body>
+
+	// used for point clouds
+	<script type="x-shader/x-vertex" id="RGBVertexShader">
+		uniform sampler2D tex;
+		varying vec3 color;
+
+		void main() {
+			color = texture2D ( tex, position.xy ).rgb;
+			gl_PointSize = 1.0;
+			gl_Position = projectionMatrix * modelViewMatrix * vec4(color, 1.0);
+		}
+	</script>
+
+	<script type="x-shader/x-fragment" id="RGBFragmentShader">
+		varying vec3 color;
+
+		void main() {
+			gl_FragColor.rgb = color;
+			gl_FragColor.a = 1.0;
+		}
+	</script>
+
+	<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+	<script type="importmap">
+	  {
+		"imports": {
+		  "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+		  "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+		}
+	  }
+	</script>
+
+  <script type="module">
+	import * as THREE from 'three';
+	import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+	import Stats from 'three/addons/libs/stats.module.js';
+	import { histogram } from './histogram.js';
+
+	let container, stats;
+
+	let camera, root, scene, renderer, controls;
+
+	var canvas = document.createElement( 'canvas' );
+
+	// settings for camera
+	var video, videoTexture, plan;
+
+	let hist, hist_texture;
+	
+	let points, histmap, hist_uniforms={
+		tex: { value: hist_texture },
+	};
+
+	var gl = canvas.getContext("webgl");
+	gl.getExtension('OES_texture_float');
+	gl.getExtension('OES_texture_float_linear');
+	
+	init();
+	createGraph();
+	animate();
+
+	function init() {
+		container = document.getElementById('container');
+
+		camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, .1, 50);
+		camera.position.z = 1;
+		
+		root = new THREE.Scene();
+		scene = new THREE.Scene();
+		root.add(scene);
+		// scene.position.x  =10;
+		scene.background = new THREE.Color(0xcccccc);
+
+		console.log("back ground",scene.background.r);
+
+	
+		renderer = new THREE.WebGLRenderer();
+		renderer.setPixelRatio(window.devicePixelRatio);
+		renderer.setSize(window.innerWidth, window.innerHeight);
+
+		const loader = new THREE.TextureLoader();
+		
+		hist = new histogram();
+
+
+		container.appendChild(renderer.domElement);
+
+		controls = new OrbitControls(camera, renderer.domElement);
+
+		stats = new Stats();
+		container.appendChild(stats.dom);
+
+		window.addEventListener('resize', onWindowResize);
+
+
+		// init for camera 
+
+		if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+			const constraints = {
+				video: { width: 1920, height: 1080, facingMode: "user" },
+			};
+		navigator.mediaDevices
+			.getUserMedia(constraints)
+			.then(function (stream) {
+				video = document.createElement("video");
+				video.srcObject = stream;
+				video.play();
+
+				video.onloadeddata = function () {
+					videoTexture = new THREE.VideoTexture(video);
+					videoTexture.minFilter = THREE.LinearFilter;
+					videoTexture.magFilter = THREE.LinearFilter;
+					videoTexture.generateMipmaps = false;
+					videoTexture.format = THREE.RGBAFormat;
+					// videoTexture.encoding = THREE.LinearEncoding;
+
+					// var geometry = new THREE.PlaneGeometry(
+					// 	1,
+					// 	video.videoHeight / video.videoWidth
+					// );
+					// var material = new THREE.MeshBasicMaterial({
+					// 	map: videoTexture,
+					// 	side: THREE.DoubleSide,
+					// });
+					// plan = new THREE.Mesh(geometry, material);
+					// plan.receiveShadow = false;
+					// plan.castShadow = false;
+					scene.background = videoTexture;
+					video.play();
+
+					
+					// histogram
+					hist_texture = hist.get_hist(videoTexture.image);
+
+					var histogramMaterial = new THREE.ShaderMaterial({
+						vertexShader: document.getElementById('histvertexShader').textContent,
+						fragmentShader: document.getElementById('histfragmentShader').textContent,
+						uniforms: hist_uniforms
+					});
+					histmap = new THREE.Mesh(new THREE.PlaneGeometry(1,1), histogramMaterial);
+					histmap.rotation.z = Math.PI/2;
+					histmap.position.set(-1,0.5,0);
+
+					scene.add(histmap);
+
+
+					// point cloud
+					var colorSpaceMaterial = new THREE.ShaderMaterial({
+						vertexShader: document.getElementById('RGBVertexShader').textContent,
+						fragmentShader: document.getElementById('RGBFragmentShader').textContent,
+						uniforms: {
+							tex: { value: videoTexture },
+						}
+					});
+
+					var discret = 1;
+					const pcl_geometry = new THREE.BufferGeometry();
+					const positions = [];
+					let compteur = 0;
+					for (let i = 0; i < video.videoWidth; i += discret)
+						for (let j = 0; j < video.videoHeight; j += discret) {
+							// positions
+							const read = new Float32Array(4);
+							positions.push(i/video.videoHeight, j/video.videoWidth,0);
+							compteur++;
+						}
+
+					pcl_geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+					pcl_geometry.computeBoundingSphere();
+					points = new THREE.Points(pcl_geometry, colorSpaceMaterial);
+					scene.add(points);
+				};
+
+				window.addEventListener("resize", onWindowResize, false);
+			});
+		}
+	
+		
+	}
+
+	function createGraph(){
+		const gridHelper = new THREE.GridHelper( 1, 10 );
+		gridHelper.position.x = 0.5;
+		gridHelper.position.z = 0.5;
+		scene.add( gridHelper );
+
+		// create wall
+		const plane_geometry = new THREE.PlaneGeometry(1,1);
+		const plane_material = new THREE.MeshBasicMaterial({color: 0x80808, side: THREE.DoubleSide, transparent: true, opacity: 0.5});
+		const left = new THREE.Mesh(plane_geometry, plane_material);
+		left.name = 'left_wall';
+		left.position.set(0, 0.5, 0.5);
+		left.rotation.y = Math.PI/2;
+		scene.add(left);
+
+		const front = new THREE.Mesh(plane_geometry, plane_material);
+		front.name = 'front_wall';
+		front.position.set(0.5, 0.5, 0);
+		scene.add(front)
+
+		const bottom = new THREE.Mesh(plane_geometry, plane_material);
+		bottom.name = 'bottom_wall';
+		bottom.position.set(0.5,0,0.5);
+		bottom.rotation.x = Math.PI/2;
+		scene.add(bottom);
+
+		const material = new THREE.LineBasicMaterial( { color: 0x0000ff, linewidth: 10 } );
+
+		const points = [];
+		points.push( new THREE.Vector3( 0, 0, 0));
+		for(let i=0;i<1; i+= 0.1){
+			points.push( new THREE.Vector3( i, 0, 0));
+			points.push( new THREE.Vector3( i, 0, 0.01));
+			points.push( new THREE.Vector3( i, 0, -0.01));
+			points.push( new THREE.Vector3( i, 0, 0));
+		}
+
+		const geometry = new THREE.BufferGeometry().setFromPoints( points );
+		
+
+		const x_axis = new THREE.Line(geometry, new THREE.LineBasicMaterial( { color: 0xFF0000, linewidth: 5  } ));
+		scene.add( x_axis );
+
+		const y_axis = new THREE.Line(geometry, new THREE.LineBasicMaterial( { color: 0x00FF00, linewidth: 5  } ));
+		y_axis.rotation.z = Math.PI/2;
+		scene.add( y_axis );
+
+		const z_axis = new THREE.Line(geometry, new THREE.LineBasicMaterial( { color: 0x0000FF, linewidth: 5  } ));
+		z_axis.rotation.y = -Math.PI/2;
+		scene.add( z_axis );
+	}
+
+	function onWindowResize() {
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize(window.innerWidth, window.innerHeight);
+	}
+
+	function animate() {
+		requestAnimationFrame(animate);
+		controls.update();
+
+		render();
+		stats.update();
+	}
+
+	function render() {
+		hist_uniforms.tex.value = hist.get_hist(videoTexture.image);
+		renderer.render(scene, camera);
+	}
+
+	</script>
+
+</body>
+
 </html>
