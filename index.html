@@ -68,7 +68,7 @@
 		graph_scene = new THREE.Scene();
 		
 		hist_scene.background = new THREE.Color(0xcccccc);
-		graph_scene.background = new THREE.Color(0xcccccc);
+		graph_scene.background = new THREE.Color();
 
 		// console.log("back ground",hist_scene.background);
 
@@ -76,6 +76,7 @@
 		renderer = new THREE.WebGLRenderer();
 		renderer.setPixelRatio(window.devicePixelRatio);
 		renderer.setSize(window.innerWidth, window.innerHeight);
+		renderer.autoClear = false;
 
 		const loader = new THREE.TextureLoader();
 		
