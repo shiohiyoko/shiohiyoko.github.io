@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+        <style>
+            body {
+              margin: 0px;
+              overflow: hidden;
+            }
+          </style>
+	</head>
+  <body>
+
+    <script
+      async
+      src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"
+    ></script>
+    <script type="importmap">
+		{
+			"imports": {
+			"three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+			"three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+			}
+		}
+    </script>
+
+    <script type="module">
+		import * as THREE from "three";
+		import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+		import Stats from "three/addons/libs/stats.module.js";
+		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+		import { VRButton } from 'three/addons/webxr/VRButton.js';
+		import { HTMLMesh } from 'three/addons/interactive/HTMLMesh.js';
+		import { InteractiveGroup } from 'three/addons/interactive/InteractiveGroup.js';
+		import { RectAreaLightHelper } from 'three/addons/helpers/RectAreaLightHelper.js';
+		import { HorizontalBlurShader } from 'three/addons/shaders/HorizontalBlurShader.js';
+
+		let stats;
+
+		let camera, scene, renderer, control;
+		let pointLight;
+		let rectlight = [];
+
+		//gui
+		let gui;
+		const gui_obj = {
+			leftWall: '#FF0000',
+			centerWall: '#FFFFFF',
+			rightWall: '#7CFC00',
+			directional: false,
+			point: true,
+			spot: false,
+			hemisphere: false,
+		};
+
+		// parameter for lights
+		const directional_param = {
+			color: '#FFFFFF',
+			intensity: 1.0,
+			shadowWidth: 1024,
+			shadowHeight: 1024,
+			shadowCameraNear: 0.005,
+			shadowCameraFar: 5
+		}
+		const point_param = {
+			color: '#FFFFFF',
+			intensity: 1.0,
+			distance:6,
+			decay: 2,
+			shadowWidth: 1024,
+			shadowHeight: 1024,
+			shadowCameraNear: 0.005,
+			shadowCameraFar: 5					
+		}
+		const spot_param = {
+			color: '#FFFFFF',
+			intensity: 1.0,
+			shadowWidth: 1024,
+			shadowHeight: 1024,
+			shadowCameraNear: 0.005,
+			shadowCameraFar: 5,
+			shadowFocus: 1
+		}
+		const hemisphere_param = {
+			skyColor: '#FFFFFF',
+			groundColor: '#FFFFFF',
+			intensity: 1.0
+		}
+
+		// parameter for materials
+		const material_param = {
+			color: '#1fffc7',
+			emissive: '#000000',
+			transparent: false,
+			opacity : 1.0,
+			depthTest: true,
+			depthWrite: true,
+			alphaTest: 0,
+			visible: true,
+			side: 'THREE.FrontSide',
+			shininess: 30,
+			flatShading: true,
+			wireframe: false,
+			vertexColors: false,
+			fog: false,
+			envMaps: 'none',
+			map: 'none',
+			alphaMap: 'none',
+			combine: THREE.MultiplyOperation,
+			reflectivity: 1.0,
+			refractionRatio: 1.0,
+			// phong parameter
+			specular: '#000000',
+			// physcial parameter
+			roughness: 1,
+			metalness: 0,
+			reflectivity: 0.5,
+			clearcoat: 0,
+			clearcoatRoughness: 0,
+			roughnessMap: 'none',
+		}
+		
+		const texture = ( function(){
+			const t = new THREE.TextureLoader().load( 'grenouille.jpg' );
+			// t.wrapS = THREE.RepeatWrapping;
+			// t.wrapT = THREE.RepeatWrapping;
+			// t.repeat.set(9,1);
+			return {none: null,
+					grenouille: t}
+		}) ();
+		const combine_selection = {"THREE.MultiplyOperation": THREE.MultiplyOperation, "THREE.MixOperation": THREE.MixOperation, "THREE.AddOperation": THREE.AddOperation}
+		
+		// ceiling light
+		let ceiling_light;
+		
+		// folder for lil gui
+		let directional_folder, point_folder,spot_folder, hemi_folder;
+		let material_folder, phong_folder, lambert_folder, physical_folder, light_folder;
+		const gui_position_off = new THREE.Vector3(0.7, 1, 0.3);
+
+
+		// --------------------- main sequece --------------------
+		init();
+		CreateTelelumenLightingSystem();
+		BuildBasicModel();
+		setlilGUI();
+		
+		renderer.setAnimationLoop( function (time) {
+			animate(time);
+		} );
+		// --------------------- main sequence -------------------
+
+		// initialize camera, light, and position
+		function init() {
+			const container = document.createElement("div");
+			document.body.appendChild(container);
+
+			scene = new THREE.Scene();
+
+			// renderer setup
+			renderer = new THREE.WebGLRenderer({ antialias: true });
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			renderer.shadowMap.enabled = true;
+			renderer.autoUpdate = true;
+			renderer.shadowMap.type = THREE.PCFSoftShadowMap; // default THREE.PCFShadowMap
+			container.appendChild(renderer.domElement);
+
+			// camera setup
+			camera = new THREE.PerspectiveCamera(
+				45,
+				window.innerWidth / window.innerHeight,
+				0.1,
+				20
+			);
+			camera.position.set(0, 1, 3);
+			control = new OrbitControls(camera, renderer.domElement);
+
+			// light 
+			const ambient = new THREE.AmbientLight(0x404040, 0.3);
+			ambient.name = "ambient";
+			ambient.position.set(5,5,0);
+			scene.add(ambient);
+
+			// Grid setup
+			const helper = new THREE.GridHelper(10, 0.4, 0x303030, 0x303030);
+			// helper.position.y = -75;
+			scene.add(helper);
+
+			// lil-gui setup
+
+			// show fps
+			stats = new Stats();
+			container.appendChild(stats.dom);
+
+			//web xr
+			document.body.appendChild( VRButton.createButton( renderer ) );
+			renderer.xr.enabled = true;
+
+
+			window.addEventListener("resize", onWindowResize);
+		}
+
+		// function for resizing the window
+		function onWindowResize() {
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+		
+		//function for lil-gui
+		function setlilGUI(){
+			gui = new GUI();
+			gui.addColor( gui_obj, 'leftWall' );
+			gui.addColor( gui_obj, 'centerWall' );
+			gui.addColor( gui_obj, 'rightWall' );
+
+			// gui file for light property
+			light_folder = gui.addFolder("lights");
+			// property for directional light
+			light_folder.add(gui_obj, 'directional');
+			directional_folder = light_folder.addFolder('directional')
+			directional_folder.addColor(directional_param, 'color');
+			directional_folder.add(directional_param, 'intensity', 0,1,0.1);
+			directional_folder.add(scene.getObjectByName('directional').shadow.mapSize, 'width', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('directional').shadow.map.dispose();
+				scene.getObjectByName('directional').shadow.map = null;});
+			directional_folder.add(scene.getObjectByName('directional').shadow.mapSize, 'height', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('directional').shadow.map.dispose();
+				scene.getObjectByName('directional').shadow.map = null;});
+			directional_folder.add(scene.getObjectByName('directional').shadow.camera, 'near', 0, 1);
+			directional_folder.add(scene.getObjectByName('directional').shadow.camera, 'far', 0, 100);
+			directional_folder.show(gui_obj.directional);
+			
+			light_folder.add(gui_obj, 'point');
+			point_folder = light_folder.addFolder('point');
+			point_folder.addColor(point_param, 'color');
+			point_folder.add(point_param, 'intensity', 0, 1, 0.1);
+			point_folder.add(point_param, 'distance', 0, 10);
+			point_folder.add(point_param, 'decay', 0, 10, 1);
+			point_folder.add(scene.getObjectByName('point').shadow.mapSize, 'width', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('point').shadow.map.dispose();
+				scene.getObjectByName('point').shadow.map = null;});
+			point_folder.add(scene.getObjectByName('point').shadow.mapSize, 'height', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('point').shadow.map.dispose();
+				scene.getObjectByName('point').shadow.map = null;});
+			point_folder.add(scene.getObjectByName('point').shadow.camera, 'near',  0, 1);
+			point_folder.add(scene.getObjectByName('point').shadow.camera, 'far', 0, 100);
+			point_folder.show(gui_obj.point);
+
+			light_folder.add(gui_obj, 'spot');
+			spot_folder = light_folder.addFolder('spot');
+			spot_folder.addColor(spot_param, 'color');
+			spot_folder.add(spot_param, 'intensity', 0,1,0.1);
+			spot_folder.add(scene.getObjectByName('spot').shadow.mapSize, 'width', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('spot').shadow.map.dispose();
+				scene.getObjectByName('spot').shadow.map = null;});
+			spot_folder.add(scene.getObjectByName('spot').shadow.mapSize, 'height', 512, 2048,2).onChange(function() {
+				scene.getObjectByName('spot').shadow.map.dispose();
+				scene.getObjectByName('spot').shadow.map = null;});
+			spot_folder.add(scene.getObjectByName('spot').shadow.camera, 'near', 0, 1);
+			spot_folder.add(scene.getObjectByName('spot').shadow.camera, 'far', 0, 100);
+			spot_folder.show(gui_obj.spot);
+
+			light_folder.add(gui_obj, 'hemisphere');
+			hemi_folder = light_folder.addFolder('hemisphere');
+			hemi_folder.addColor(hemisphere_param, 'skyColor');
+			hemi_folder.addColor(hemisphere_param, 'groundColor');
+			hemi_folder.add(hemisphere_param, 'intensity', 0,1,0.1);
+			hemi_folder.show(gui_obj.hemisphere);
+
+			let side = {'THREE.BackSide':1, 'THREE.FrontSide':0, 'THREE.DoubleSide':2}
+			// gui for common material
+			material_folder = gui.addFolder('material');
+			material_folder.addColor(material_param, 'color').onChange(value => MaterialColorChanger(value, 'color'));
+			material_folder.addColor(material_param, 'emissive').onChange(value => MaterialColorChanger(value, 'emissive'));
+			material_folder.add(material_param, 'transparent').onChange(value => MaterialPropertyChanger(value, 'transparent'));
+			material_folder.add(material_param, 'opacity', 0,1).onChange(value => MaterialPropertyChanger(value, 'opacity'));
+			material_folder.add(material_param, 'depthTest').onChange(value => MaterialPropertyChanger(value, 'depthTest'));
+			material_folder.add(material_param, 'depthWrite').onChange(value => MaterialPropertyChanger(value, 'depthWrite'));
+			material_folder.add(material_param, 'alphaTest', 0,1).onChange(value => MaterialPropertyChanger(value, 'alphaTest'));
+			material_folder.add(material_param, 'visible').onChange(value => MaterialPropertyChanger(value, 'visible'));
+			material_folder.add(material_param, 'side', side).onChange(value=> MaterialPropertyChanger(value, 'side')); 
+			material_folder.add(material_param, 'flatShading').onChange(value=> MaterialPropertyChanger(value, 'flatShading'));
+			material_folder.add(material_param, 'wireframe').onChange(value=> MaterialPropertyChanger(value, 'wireframe'));
+			material_folder.add(material_param, 'vertexColors').onChange(value => MaterialPropertyChanger(value, 'vertexColors'));
+			material_folder.add(material_param, 'fog').onChange(value => MaterialPropertyChanger(value, 'fog'));
+			material_folder.add(material_param, 'envMaps', texture).onChange(value => MaterialPropertyChanger(value, 'envMaps')); 
+			material_folder.add(material_param, 'map', texture).onChange(value => MaterialPropertyChanger(value, 'map'));
+			material_folder.add(material_param, 'alphaMap', texture).onChange(value => MaterialPropertyChanger(value, 'alphaMap'));
+			material_folder.add(material_param, 'combine', combine_selection).onChange(value => MaterialPropertyChanger(value, 'combine'));
+			material_folder.add(material_param, 'reflectivity', 0,1).onChange(value => MaterialPropertyChanger(value, 'reflectivity'));
+			material_folder.add(material_param, 'refractionRatio', 0,1).onChange(value => MaterialPropertyChanger(value, 'refractionRatio'));
+		
+			// gui for MeshPhongMaterial
+			phong_folder = gui.addFolder('Basic_Cylinder');
+			phong_folder.addColor(material_param, 'specular').onChange(value => {scene.getObjectByName('Basic_Cylinder').material['specular'].set(value);});
+			phong_folder.add(material_param, 'shininess',0,100).onChange(value=> {scene.getObjectByName('Basic_Cylinder').material['specular'].set(value);});
+			// phong_folder.addColor(material_param, 'emissive').onChange();
+
+			// lambert_folder = gui.addFolder('Basic_Cone');
+			
+			physical_folder = gui.addFolder('Basic_Sphere');
+			physical_folder.add(material_param, 'roughness',0,1).onChange(value=> PhysicalMaterialChanger(value, 'roughness'));
+			physical_folder.add(material_param, 'metalness',0,1).onChange(value=> PhysicalMaterialChanger(value, 'metalness'));
+			physical_folder.add(material_param, 'reflectivity', 0,1).onChange(value=> PhysicalMaterialChanger(value, 'reflectivity'));
+			physical_folder.add(material_param, 'clearcoat', 0,1).onChange(value=> PhysicalMaterialChanger(value, 'clearcoat'));
+			physical_folder.add(material_param, 'clearcoatRoughness', 0,1).onChange(value=> PhysicalMaterialChanger(value, 'clearcoatRoughness'));
+			physical_folder.add(material_param, 'roughnessMap', texture).onChange(value=> PhysicalMaterialChanger(value, 'roughnessMap'));
+			
+			// gui.domElement.style.visibility = 'hidden';
+
+			const group = new InteractiveGroup( renderer, camera );
+			// group.name = "interactiveGroup";
+			scene.add( group );
+
+
+			const mesh = new HTMLMesh( gui.domElement );
+			mesh.name = "gui_vr";
+			// mesh.material.transparent = false;
+			mesh.position.x = gui_position_off.x;
+			mesh.position.y = gui_position_off.y;
+			mesh.position.z = gui_position_off.z;
+			mesh.rotation.y = -Math.PI /4;
+			// mesh.position.x = gui_position_off.x;
+			// mesh.position.y = gui_position_off.y;
+			// mesh.position.z = gui_position_off.z;
+			// mesh.rotation.y = Math.PI / 4;
+			// mesh.rotation.x = Math.PI / 2;
+			mesh.scale.setScalar( 1 );
+			group.add( mesh );
+		}
+	
+
+		function MaterialColorChanger(value, property){
+			// console.log(value);
+			scene.getObjectByName('Basic_Cylinder').material[property].set(value);			
+			scene.getObjectByName('Basic_Cone').material[property].set(value);
+			scene.getObjectByName('Basic_Sphere').material[property].set(value);
+		}
+
+		function MaterialPropertyChanger(value, property){
+			scene.getObjectByName('Basic_Cylinder').material[property] = value;			
+			scene.getObjectByName('Basic_Cone').material[property] = value;
+			scene.getObjectByName('Basic_Sphere').material[property] = value;
+
+			scene.getObjectByName('Basic_Cylinder').material.needsUpdate = true;
+			scene.getObjectByName('Basic_Cone').material.needsUpdate = true;
+			scene.getObjectByName('Basic_Sphere').material.needsUpdate = true;
+		}
+
+		function PhysicalMaterialChanger(value, property){
+			scene.getObjectByName('Basic_Sphere').material[property] = value;
+		}
+
+		function PhongMaterialChanger(value, property){
+			scene.getObjectByName('Basic_Cylinder').material[property] = value;			
+		}
+
+		function lightChanger(value, obj_name, property, shadow){
+			let object = scene.getObjectByName(obj_name);
+			if(shadow){
+				object.shadow[property] = value;
+				light.shadowMap.dispose();
+				light.shadowMap = null;
+				object.shadow.needsUpdate = true;
+			}else{
+				object.camera[property] = value;
+			}
+		}
+		// create a table and basic material 
+		function BuildBasicModel(){
+
+			// tabel 
+			const tabel_top = new THREE.Mesh( new THREE.BoxGeometry( 1, 0.05, 0.5 ), new THREE.MeshLambertMaterial({ color: 0x808080}));
+			tabel_top.castShadow = true;
+			tabel_top.receiveShadow = true;
+			tabel_top.position.y = 0.5;
+			scene.add(tabel_top);
+
+			for(let i = 0; i<4; i++){
+				const tabel_leg = new THREE.Mesh( new THREE.BoxGeometry( 0.05, 0.5, 0.05 ), new THREE.MeshLambertMaterial({ color: 0x808080 }));
+				tabel_leg.castShadow = true;
+				tabel_leg.receiveShadow = true;
+				tabel_leg.position.set(0.45*Math.cos(Math.PI/2*i)-0.45*Math.sin(Math.PI/2*i), 0.25, 0.20*Math.cos(Math.PI/2*i)+0.20*Math.sin(Math.PI/2*i));
+				scene.add(tabel_leg);
+			}
+
+			// basic models
+			//cone
+			const cone_material =  new THREE.MeshLambertMaterial( {color: 0x1fffc7});
+			const cone = new THREE.Mesh( new THREE.ConeGeometry( 0.05, 0.2, 32 ), cone_material );
+			cone.name = 'Basic_Cone';
+			cone.castShadow = true;
+			cone.receiveShadow = true;
+			cone.needsUpdate = true;
+			cone.position.y = 0.6;
+			cone.position.x = 0.25;
+			scene.add( cone );
+
+			//cylinder
+			const cylinder_material = new THREE.MeshPhongMaterial( {color:0x1fffc7} );
+			// cylinder_material.wireframe = false;
+			const cylinder = new THREE.Mesh( new THREE.CylinderGeometry( 0.05, 0.05, 0.2, 32 ), cylinder_material );
+			cylinder.name = 'Basic_Cylinder';
+			cylinder.castShadow = true;
+			cylinder.receiveShadow = true;
+			cylinder.needsUpdate = true;
+			cylinder.position.y = 0.60;
+			cylinder.position.x = -0.25;
+			scene.add( cylinder );
+
+			//sphere
+			const sphere_material = new THREE.MeshPhysicalMaterial( { color: 0x1fffc7 } );
+			const sphere = new THREE.Mesh( new THREE.SphereGeometry( 0.05, 16, 16 ), sphere_material );
+			sphere.name = 'Basic_Sphere';
+			sphere.castShadow = true;
+			sphere.receiveShadow = true;
+			sphere.needsUpdate = true;
+			sphere.position.y = 0.575;
+			scene.add( sphere );
+
+		}
+
+		// function to create telelumen light system
+		function CreateTelelumenLightingSystem(){
+			// all the value are cm
+			let wall_tmp = [];
+			let room_size = 2;
+			let frame_size = 0.1;
+			let wall_frame_space = 0.50;
+			let roof_thickness = 0.05;
+			let light_size = 0.20;
+			
+			const leg1 = CreateFrame( room_size, frame_size )
+			leg1.name ="leg1";
+			leg1.position.set((room_size+frame_size)/2, room_size, (room_size+frame_size)/2);
+			leg1.rotation.x = Math.PI/2;
+			
+			for(let i=0; i<4; i++){
+				const tmp = leg1.clone();
+				let pos = tmp.position;
+				tmp.position.set(	pos.x*Math.cos(Math.PI/2*i)-pos.z*Math.sin(Math.PI/2*i), 
+									pos.y, 
+									pos.x*Math.sin(Math.PI/2*i)+pos.z*Math.cos(Math.PI/2*i));
+				scene.add(tmp);
+
+			}
+			// top of the frame on the wall
+			const wallframe_top = CreateFrame( room_size, frame_size);
+			wallframe_top.name ="wallframe_top";
+			wallframe_top.position.set(-(room_size)/2, room_size-frame_size/2, room_size/2+frame_size/2);
+			wallframe_top.rotation.y = Math.PI/2;
+			wall_tmp.push(wallframe_top);
+
+			const wallframe_bottom = CreateFrame( room_size, frame_size );
+			wallframe_bottom.name ="wallframe_bottom";
+			wallframe_bottom.position.set(-(room_size)/2, room_size-frame_size/2-wall_frame_space, room_size/2+frame_size/2);
+			wallframe_bottom.rotation.y = Math.PI/2;
+			wall_tmp.push(wallframe_bottom);
+
+			for(let i=0; i<4; i++)
+				for(let j=0; j<wall_tmp.length; j++){
+					const tmp = wall_tmp[j].clone();
+					let pos = tmp.position;
+					tmp.position.set(pos.x*Math.cos(Math.PI/2*i)-pos.z*Math.sin(Math.PI/2*i), 
+									 pos.y, 
+									 pos.x*Math.sin(Math.PI/2*i)+pos.z*Math.cos(Math.PI/2*i));
+					if(i%2 == 0)
+						tmp.rotation.y = Math.PI/2*(i+1);
+					else
+						tmp.rotation.y = Math.PI/2*(i-1);
+					scene.add(tmp);
+				}
+			
+			// top wall mesh
+			for(let i=0; i<4; i++) {
+				const wall_mesh = new THREE.MeshPhysicalMaterial({color:0xFFFFFF});
+				const top_wall = new THREE.Mesh( new THREE.BoxGeometry(room_size, wall_frame_space, 0.03), wall_mesh );
+				top_wall.position.set(	(room_size/2+frame_size/2)*Math.cos(Math.PI/2*i), 
+										 room_size-frame_size*2-roof_thickness, 
+										(room_size/2+frame_size/2)*Math.sin(Math.PI/2*i));
+				top_wall.rotation.y = Math.PI/2*(i+1);
+				scene.add(top_wall);
+			}
+
+			// wall mesh
+			const wall_mesh = [
+				new THREE.MeshPhysicalMaterial({color: gui_obj.leftWall, side: THREE.DoubleSide}), 
+				new THREE.MeshPhysicalMaterial({color: gui_obj.centerWall, side: THREE.DoubleSide}), 
+				new THREE.MeshPhysicalMaterial({color: gui_obj.rightWall, side: THREE.DoubleSide})];
+			const wall_name = ["leftWall", "centerWall", "rightWall"];
+			const ref_name = ['leftWallReflection', 'centerWallReflection', 'rightWallReflection'];
+			
+			for(let i=0; i<3; i++) {
+				const wall = new THREE.Mesh( new THREE.BoxGeometry(room_size, room_size-wall_frame_space-frame_size, 0.01), wall_mesh[i] );
+				wall.name = wall_name[i]; 
+				wall.position.set((room_size/2+frame_size/2)*Math.cos(Math.PI/2*i), 
+										room_size/2-frame_size*2-roof_thickness*2, 
+										-(room_size/2+frame_size/2)*Math.sin(Math.PI/2*i));
+
+				wall.rotation.y = Math.PI/2*(i+1);
+
+				// set reflection of the light
+				let ref = new THREE.RectAreaLight( gui_obj[wall_name[i]], 1.0,  room_size, room_size-wall_frame_space-frame_size );
+				ref.name = ref_name[i];
+				ref.position.set((room_size/2+frame_size/2)*Math.cos(Math.PI/2*i), 
+										room_size/2-frame_size/2-wall_frame_space/2, 
+									   -(room_size/2+frame_size/2)*Math.sin(Math.PI/2*i) );
+
+				ref.rotation.y = Math.PI/2*(i+1);
+				scene.add( ref );
+				scene.add(wall);
+			}
+
+			// roof mesh
+			const roof = new THREE.Mesh( new THREE.BoxGeometry( room_size+frame_size*2, roof_thickness, room_size+frame_size*2 ), new THREE.MeshPhysicalMaterial({ flatShading: false }));
+			roof.name ="roof";
+			roof.position.set(0, room_size+roof_thickness/2, 0);
+			scene.add(roof);
+
+			// floor mesh
+			const floor = new THREE.Mesh( new THREE.BoxGeometry( room_size+frame_size*3, 0.01, room_size+frame_size*3 ), new THREE.MeshPhysicalMaterial({ color: 0xFFFFFF }));
+			floor.name ="floor";
+			floor.receiveShadow = true;
+			floor.position.set(0, 0, 0);
+			scene.add(floor);
+
+			// roof frame mesh
+			const roof_frame1 = CreateFrame(room_size, frame_size);
+			roof_frame1.name ="roof";
+			roof_frame1.position.set(room_size/2, room_size, room_size/2-room_size/3);
+			roof_frame1.rotation.y = -Math.PI/2;
+			scene.add(roof_frame1);
+			
+			const roof_frame2 = CreateFrame(room_size, frame_size);
+			roof_frame2.name ="roof"; 
+			roof_frame2.position.set(room_size/2, room_size, room_size/2-room_size*2/3);
+			roof_frame2.rotation.y = -Math.PI/2;
+			scene.add(roof_frame2);
+			
+			const roof_frame3 = CreateFrame( room_size/3-frame_size/2 , frame_size);
+			roof_frame3.name ="roof";
+			roof_frame3.position.set(0, room_size, room_size/6+frame_size/2);
+			scene.add(roof_frame3);
+
+			const roof_frame4 = CreateFrame( room_size/3-frame_size/2, frame_size );
+			roof_frame4.name ="roof"; 
+			roof_frame4.position.set(0, room_size, -room_size/6-frame_size/2);
+			roof_frame4.rotation.y = Math.PI;
+			scene.add(roof_frame4);
+			
+			const roof_frame5 = CreateFrame( room_size/3-frame_size, frame_size);
+			roof_frame5.name ="roof"; 
+			roof_frame5.position.set(room_size/2-room_size/3, room_size, -room_size/6+frame_size/2);
+			scene.add(roof_frame5);
+			
+			const roof_frame6 = roof_frame5.clone();
+			roof_frame6.position.x = -room_size/2+room_size/3;
+			scene.add(roof_frame6);
+
+			// roof light mesh
+			const roof_light = new THREE.Mesh( new THREE.CylinderGeometry( light_size/2, light_size, 0.1, 4 ), new THREE.MeshPhongMaterial( {color: 0xffff00} ) );
+			roof_light.position.y = room_size-0.05;
+			roof_light.rotation.y = Math.PI/4;
+			scene.add(roof_light);
+
+			// light system
+
+			// directional light
+			const direction = new THREE.DirectionalLight({intensity: gui_obj.directional, color:directional_param.color});
+			direction.name = "directional";
+			direction.needsUpdate = true;
+			direction.position.set(0,2, 0);
+			direction.castShadow = true;
+			direction.shadow.mapSize.width = 1024; // default
+			direction.shadow.mapSize.height = 1024; // default
+			direction.shadow.camera.near = 0.005; // default
+			direction.shadow.camera.far = 5; // default
+
+			scene.add(direction);
+
+			// const directional_helper = new THREE.DirectionalLightHelper( direction, 5 );
+			// scene.add(directional_helper);
+
+			// point light
+			const point = new THREE.PointLight( 0xff0000, point_param.intensity, point_param.distance, point_param.decay );
+			point.name = "point";
+			point.position.set( 0, room_size, 0);
+			point.castShadow = true;
+			point.shadow.mapSize.width = 1024; // default
+			point.shadow.mapSize.height = 1024; // default
+			point.shadow.camera.near = 0.005; // default
+			point.shadow.camera.far = 5; // default
+			scene.add( point );
+
+			// const point_helper = new THREE.PointLightHelper( point, 5);
+			// scene.add( point_helper );
+
+			// spot light
+			const spot = new THREE.SpotLight({intensity: gui_obj.spot});
+			spot.name = "spot";
+			spot.castShadow = true;
+			spot.shadow.mapSize.width = 1024;
+			spot.shadow.mapSize.height = 1024;
+			spot.shadow.camera.near = 0.005; // default
+			spot.shadow.camera.far = 5; // default
+			spot.position.set(0,room_size,0);
+			scene.add(spot);
+
+			// const spot_helper = new THREE.SpotLightHelper( spot, 5 );
+			// scene.add(spot_helper);
+
+			//hemisphere light
+			const hemisphere = new THREE.HemisphereLight({intensity: gui_obj.hemisphere});
+			hemisphere.name = "hemisphere";
+			hemisphere.position.set(0,room_size,0);
+			scene.add(hemisphere);
+
+			// const hemi_helper = new THREE.HemisphereLightHelper( hemisphere, 5 );
+			// scene.add(hemi_helper);
+		}
+
+		// function to create basic frame fro telelumen lighting system
+		function CreateFrame(f_length, f_size){
+
+			const shape =  new THREE.Shape();
+			let rail = f_size/10;
+			let side =[ [0,				 0], 
+						[f_size/5,  	 0],
+						[f_size/5,  	 rail],
+						[f_size/5+rail,  rail],
+						[f_size/5+rail,  0],
+						[f_size/5*3+rail,0],
+						[f_size/5*3+rail,rail],
+						[f_size/5*4, 	 rail],
+						[f_size/5*4,	 0],
+						[f_size,		 0]]
+
+			for(let i = 0; i < side.length; i++){
+				side[i][0] -= f_size/2; 
+				side[i][1] -= f_size/2; 			
+			}
+
+			shape.moveTo( side[0][0], side[0][1]);
+			for(let i=0; i<4; i++){
+				for(let j=0; j<side.length; j++){
+					let idx = Math.abs(j - (side.length-1)*(i%2));
+
+					shape.lineTo( side[idx][0]*Math.cos(Math.PI/2*i)-side[idx][1]*Math.sin(Math.PI/2*i), 
+							-side[idx][0]*Math.sin(Math.PI/2*i)+side[idx][1]*Math.cos(Math.PI/2*i) );			  
+				}
+			}
+
+			const extrudeSettings = {
+				steps: 2,
+				depth: f_length,
+				bevelEnabled: true,
+				bevelThickness: 0,
+				bevelSize: 0,
+				bevelOffset: 0,
+				bevelSegments: 1
+			};
+
+			const geometry = new THREE.ExtrudeGeometry( shape, extrudeSettings );
+			const material = new THREE.MeshLambertMaterial({ flatShading: false , color: 0x808080});
+			const mesh = new THREE.Mesh( geometry, material ) ;
+			return mesh ;
+		}
+		
+		// animation loop
+		function animate(time) {
+			scene.getObjectByName("leftWall").material.color.set(gui_obj.leftWall);
+			scene.getObjectByName("rightWall").material.color.set(gui_obj.rightWall);
+			scene.getObjectByName("centerWall").material.color.set(gui_obj.centerWall);
+			
+			scene.getObjectByName("leftWallReflection").color.set(gui_obj.leftWall);
+			scene.getObjectByName("rightWallReflection").color.set(gui_obj.rightWall);
+			scene.getObjectByName("centerWallReflection").color.set(gui_obj.centerWall);
+
+			if(gui_obj.directional){
+				directional_folder.show(true);
+				let object = scene.getObjectByName("directional");
+				object.intensity = directional_param.intensity;
+				object.color.set(directional_param.color);
+			}
+			else{
+				directional_folder.hide();
+				scene.getObjectByName("directional").intensity = 0;
+			}
+
+			if(gui_obj.point){
+				point_folder.show(true);
+				scene.getObjectByName("point").intensity = point_param.intensity;
+				scene.getObjectByName("point").color.set(point_param.color);
+				scene.getObjectByName("point").distance = point_param.distance;
+				scene.getObjectByName("point").decay = point_param.decay;
+				scene.getObjectByName("point").needsUpdate = true;
+			}
+			else{
+				point_folder.hide();
+				scene.getObjectByName("point").intensity = 0;
+			}
+			
+			if(gui_obj.spot){
+				spot_folder.show();
+				scene.getObjectByName("spot").intensity = spot_param.intensity;
+				scene.getObjectByName("spot").color.set(spot_param.color);
+			}
+			else{
+				spot_folder.hide();
+				scene.getObjectByName("spot").intensity = 0;
+			}
+
+			if(gui_obj.hemisphere){
+				hemi_folder.show();
+				scene.getObjectByName("hemisphere").intensity = hemisphere_param.intensity;
+				scene.getObjectByName("hemisphere").color.set(hemisphere_param.skyColor);
+				scene.getObjectByName("hemisphere").groundColor.set(hemisphere_param.groundColor);
+			}
+			else{
+				hemi_folder.hide();
+				scene.getObjectByName("hemisphere").intensity = 0;
+			}
+
+			renderer.render( scene, camera );
+			stats.update();
+			control.update();
+		}
+
+    </script>
+  </body>
+</html>

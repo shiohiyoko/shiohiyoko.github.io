@@ -1,0 +1,199 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Three.js - Custom BufferGeometry</title>
+    <style>
+    html, body {
+        height: 100%;
+        margin: 0;
+    }
+    #c {
+        width: 100%;
+        height: 100%;
+        display: block;
+    }
+    </style>
+  </head>
+  <body>
+    <canvas id="c"></canvas>
+  </body>
+
+  <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+      }
+    }
+  </script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({canvas, antialias: true});
+
+	let camera, controls;
+
+	let scene;
+
+	// information of face vertices
+    const vertices = [
+      // front left
+      { pos: [   -1,   -1,    1], norm: [ 0,  0,  1], uv: [    0,    0], }, // 0
+      { pos: [ -0.5,   -1,    1], norm: [ 0,  0,  1], uv: [ 0.25,    0], }, // 1
+      { pos: [   -1,    1,    1], norm: [ 0,  0,  1], uv: [    0,    1], }, // 2
+      { pos: [ -0.5,    1,    1], norm: [ 0,  0,  1], uv: [ 0.25,    1], }, // 3
+      // front top
+      { pos: [ -0.5,  0.5,    1], norm: [ 0,  0,  1], uv: [ 0.25, 0.75], }, // 4
+      { pos: [  0.5,  0.5,    1], norm: [ 0,  0,  1], uv: [ 0.75, 0.75], }, // 5
+      { pos: [ -0.5,    1,    1], norm: [ 0,  0,  1], uv: [ 0.25, 1   ], }, // 6
+      { pos: [  0.5,    1,    1], norm: [ 0,  0,  1], uv: [ 0.75, 1   ], }, // 7
+      // front bottom
+      { pos: [ -0.5,   -1,    1], norm: [ 0,  0,  1], uv: [ 0.25,    0], }, // 8
+      { pos: [  0.5,   -1,    1], norm: [ 0,  0,  1], uv: [ 0.75,    0], }, // 9
+      { pos: [ -0.5, -0.5,    1], norm: [ 0,  0,  1], uv: [ 0.25, 0.25], }, // 10
+      { pos: [  0.5, -0.5,    1], norm: [ 0,  0,  1], uv: [ 0.75, 0.25], }, // 11
+      // front right
+      { pos: [  0.5,   -1,    1], norm: [ 0,  0,  1], uv: [ 0.75, 0   ], }, // 12
+      { pos: [    1,   -1,    1], norm: [ 0,  0,  1], uv: [ 1   , 0   ], }, // 13
+      { pos: [  0.5,    1,    1], norm: [ 0,  0,  1], uv: [ 0.75, 1   ], }, // 14
+      { pos: [    1,    1,    1], norm: [ 0,  0,  1], uv: [ 1   , 1   ], }, // 15
+    ]
+
+	// main function
+	Init();
+	main();
+	requestAnimationFrame(render);
+
+	function Init() {
+		window.addEventListener("click", onclick, true);
+
+		const fov = 75;
+		const aspect = 2;  // the canvas default
+		const near = 0.1;
+		const far = 100;
+		camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+		camera.position.z = 5;
+
+		controls = new OrbitControls( camera, renderer.domElement );
+		controls.listenToKeyEvents( window ); // optional
+
+		scene = new THREE.Scene();
+		scene.background = new THREE.Color( 0x333333 );
+		
+		{	
+			const color = 0xFFFFFF;
+			const intensity = 1;
+			const light = new THREE.DirectionalLight(color, intensity);
+			light.position.set(-1, 2, 4);
+			scene.add(light);
+		}
+	}
+
+
+	function main() {
+		// param for cube
+		const numVertices = vertices.length;
+		const positionNumComponents = 3;
+		const normalNumComponents = 3;
+		const uvNumComponents = 2;
+		const positions = new Float32Array(numVertices * positionNumComponents);
+		const normals = new Float32Array(numVertices * normalNumComponents);
+		const uvs = new Float32Array(numVertices * uvNumComponents);
+		let posNdx = 0;
+		let nrmNdx = 0;
+		let uvNdx = 0;
+
+		// setting positions for each vertex
+		for (const vertex of vertices) {
+			positions.set(vertex.pos, posNdx);
+			normals.set(vertex.norm, nrmNdx);
+			uvs.set(vertex.uv, uvNdx);
+			posNdx += positionNumComponents;
+			nrmNdx += normalNumComponents;
+			uvNdx += uvNumComponents;
+		}
+
+		// set param for geometry
+		const geometry = new THREE.BufferGeometry();
+		geometry.setAttribute(
+			'position',
+			new THREE.BufferAttribute(positions, positionNumComponents));
+		geometry.setAttribute(
+			'normal',
+			new THREE.BufferAttribute(normals, normalNumComponents));
+		geometry.setAttribute(
+			'uv',
+			new THREE.BufferAttribute(uvs, uvNumComponents));
+
+		// set index attribute
+		const index = [];
+		for(let i =0; i<24; i++){
+			let tmp = i*4;
+			index.push(tmp);
+			index.push(tmp + 1);
+			index.push(tmp + 2);
+			index.push(tmp + 2);
+			index.push(tmp + 1);
+			index.push(tmp + 3);
+		}
+		geometry.setIndex(index);
+
+		// set texture
+		const loader = new THREE.TextureLoader();
+		const texture = loader.load('grenouille.jpg');
+
+		function makeInstance(geometry, color, x) {
+			const material = new THREE.MeshBasicMaterial({color, map: texture,side: THREE.DoubleSide, wireframe: false});
+
+			const pos = [[0,0,0], [0,0,0], [0,0,-2], [0,0,0], [0,0,0], [0,0,0]];
+			const rot = [[0,0,0], [0,-Math.PI/2,0], [0,0,0], [0,Math.PI/2,0], [-Math.PI/2,0,0], [Math.PI/2,0,0]];
+			// create each face for cube geometry
+			for(let i=0; i<6; i++){
+				let face = new THREE.Mesh(geometry, material);
+				face.position.set(pos[i][0], pos[i][1], pos[i][2]);
+				face.rotation.set(rot[i][0], rot[i][1], rot[i][2]);
+				face.position.x += x;
+				// face.position.y += ;
+				scene.add(face);
+			}
+		}
+
+		makeInstance(geometry, 0xFFFFFF,  0);
+		makeInstance(geometry, 0xFFFFFF, -3);
+		makeInstance(geometry, 0xFFFFFF,  3);
+	}
+
+	function resizeRendererToDisplaySize(renderer) {
+			const canvas = renderer.domElement;
+			const width = canvas.clientWidth;
+			const height = canvas.clientHeight;
+			const needResize = canvas.width !== width || canvas.height !== height;
+			if (needResize) {
+				renderer.setSize(width, height, false);
+			}
+			return needResize;
+	}
+
+	function render(time) {
+//    time *= 0.0004;
+
+		if (resizeRendererToDisplaySize(renderer)) {
+			const canvas = renderer.domElement;
+			camera.aspect = canvas.clientWidth / canvas.clientHeight;
+			camera.updateProjectionMatrix();
+		}
+
+		controls.update(); // only required if controls.enableDamping = true, or if controls.autoRotate = true
+		renderer.render(scene, camera);
+		requestAnimationFrame(render);
+	}
+
+</script>
+</html>

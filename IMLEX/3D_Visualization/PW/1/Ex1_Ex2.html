@@ -1,0 +1,541 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Three.js - Primitives</title>
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        #c {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        .split {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        }
+        .split>div {
+        width: 100%;
+        height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas id="c"></canvas>
+    <div class="split">
+        <div id="view1" tabindex="1"></div>
+        <div id="view2" tabindex="2"></div>
+    </div>
+</body>
+<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+<script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.148.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.148.0/examples/jsm/"
+    }
+  }
+</script>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+    import { TTFLoader } from 'three/addons/loaders/TTFLoader.js';
+
+    import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls';
+    import { FlyControls } from 'three/addons/controls/FlyControls.js'
+    import { TrackballControls } from 'three/addons/controls/TrackballControls.js'
+
+    const canvas = document.querySelector('#c');
+    const renderer = new THREE.WebGLRenderer({ canvas });
+
+    // camera control parameters
+    let camera, camera2, control, control2;
+
+    // scene parameters
+    let view1Elem, view2Elem, scene;
+
+    // storage for all objects
+    const objects = [];
+
+    const spread = 30;
+
+
+    // main function
+    Init();
+    main();
+
+    function Init(){
+
+        // setting element for two views
+        view1Elem = document.querySelector('#view1');
+        view2Elem = document.querySelector('#view2');
+
+        //params for camera
+        const fov = 40;
+        const aspect = 2;  // the canvas default
+        const near = 0.1;
+        const far = 1000;
+
+        // initialize camera
+        camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        camera.position.z = 200;
+        camera.position.y = -300;
+        camera.rotation.x = 45;
+
+        // setting scene
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xAAAAAA);
+
+        // setting control for camera
+        control = new FlyControls(camera, view1Elem);
+        // control = new OrbitControls(camera, view1Elem);
+        control.dragToLook = true;
+
+        // initialize camera2
+        camera2 = new THREE.OrthographicCamera(
+            -100,  // left
+             100,   // right
+            -60, // top
+             60, // bottom
+        );
+        camera2.position.set(0, 300, 600);
+        camera2.lookAt(0, 0, 0);
+        
+        // setting control for camera2
+        // control2 = new OrbitControls(camera2, view2Elem);
+        control2 = new TrackballControls(camera2, view2Elem);
+
+
+        //settings for lighting
+        {
+            const color = 0xFFFFFF;
+            const intensity = 1;
+            const light = new THREE.DirectionalLight(color, intensity);
+            light.position.set(-1, 2, 4);
+            scene.add(light);
+        }
+        //settings for another lighting
+        {
+            const color = 0xFFFFFF;
+            const intensity = 1;
+            const light = new THREE.DirectionalLight(color, intensity);
+            light.position.set(1, -2, -4);
+            scene.add(light);
+        }
+    }
+
+    function main() {
+
+        // Create geometry objects three times
+        for(let i = 0; i <3; i++){
+            //Geometry for box
+            {
+                const width = 8;
+                const height = 8;
+                const depth = 8;
+                addSolidGeometry(-2, 2, i, new THREE.BoxGeometry(width*Math.random()*10, height, depth));
+                
+            }
+            // Geometry for circle
+            {
+                const radius = 7;
+                const segments = 24; 
+                addSolidGeometry(-1, 2, i, new THREE.CircleGeometry(radius*Math.random(), segments));
+            }
+            //Geometry for cone
+            {
+                const radius = 6;
+                const height = 8;
+                const segments = 16; 
+                addSolidGeometry(0, 2, i, new THREE.ConeGeometry(radius*Math.random(), height*Math.random(), segments));
+            }
+            // Geometry for Cylinder 
+            {
+                const radiusTop = 4;
+                const radiusBottom = 4;
+                const height = 8;
+                const radialSegments = 12;
+                addSolidGeometry(1, 2, i, new THREE.CylinderGeometry(radiusTop*Math.random(), radiusBottom*Math.random(), height*Math.random(), radialSegments));
+            }
+            // Geometry for Dodecahedron
+            {
+                const radius = 7;
+                addSolidGeometry(2, 2, i, new THREE.DodecahedronGeometry(radius*Math.random()));
+            }
+            // Geometry for Heart
+            {
+                const shape = new THREE.Shape();
+                const x = -2.5;
+                const y = -5;
+                shape.moveTo(x + 2.5, y + 2.5);
+                shape.bezierCurveTo(x + 2.5, y + 2.5, x + 2, y, x, y);
+                shape.bezierCurveTo(x - 3, y, x - 3, y + 3.5, x - 3, y + 3.5);
+                shape.bezierCurveTo(x - 3, y + 5.5, x - 1.5, y + 7.7, x + 2.5, y + 9.5);
+                shape.bezierCurveTo(x + 6, y + 7.7, x + 8, y + 4.5, x + 8, y + 3.5);
+                shape.bezierCurveTo(x + 8, y + 3.5, x + 8, y, x + 5, y);
+                shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+
+                const extrudeSettings = {
+                    steps: 2,
+                    depth: 2*Math.random(),
+                    bevelEnabled: true,
+                    bevelThickness: Math.random(),
+                    bevelSize: 1,
+                    bevelSegments: 2,
+                };
+                
+                addSolidGeometry(-2, 1, i, new THREE.ExtrudeGeometry(shape, extrudeSettings));
+            
+            }
+            // Geometry for Icosahedron
+            {
+                const radius = 7;
+                addSolidGeometry(-1, 1, i, new THREE.IcosahedronGeometry(radius*Math.random()));
+            }
+            // Geometry for Lathe
+            {
+                const points = [];
+                for (let i = 0; i < 10; ++i) {
+                    points.push(new THREE.Vector2(Math.sin(i * 0.2) * 3*Math.random() + 3, (i - 5) * .8));
+                }
+                addSolidGeometry(0, 1, i, new THREE.LatheGeometry(points));
+                
+            }
+            // Geometry for Octahedron
+            {
+                const radius = 7;
+                addSolidGeometry(1, 1, i, new THREE.OctahedronGeometry(radius*Math.random()));
+            }
+            //Geometry for Plane
+            {
+                const width = 9;
+                const height = 9;
+                const widthSegments = 2;
+                const heightSegments = 2;    
+                addSolidGeometry(-2, 0, i, new THREE.PlaneGeometry(width*Math.random(), height, widthSegments, heightSegments));
+            }
+            //Geometry for Polyhedron
+            {
+                const verticesOfCube = [
+                    -1, -1, -1, 1, -1, -1, 1, 1, -1, -1, 1, -1,
+                    -1, -1, 1, 1, -1, 1, 1, 1, 1, -1, 1, 1,
+                ];
+                const indicesOfFaces = [
+                    2, 1, 0, 0, 3, 2,
+                    0, 4, 7, 7, 3, 0,
+                    0, 1, 5, 5, 4, 0,
+                    1, 2, 6, 6, 5, 1,
+                    2, 3, 7, 7, 6, 2,
+                    4, 5, 6, 6, 7, 4,
+                ];
+                const radius = 7;
+                const detail = 2;
+                addSolidGeometry(-1, 0, i, new THREE.PolyhedronGeometry(verticesOfCube, indicesOfFaces, radius*Math.random(), detail));
+            }
+            // Geometry for Ring
+            {
+                const innerRadius = 2;
+                const outerRadius = 7;
+                const segments = 18;
+                addSolidGeometry(0, 0, i, new THREE.RingGeometry(innerRadius, outerRadius, segments));
+            }
+            // Geometry for heart
+            {
+                const shape = new THREE.Shape();
+                const x = -2.5;
+                const y = -5;
+                shape.moveTo(x + 2.5, y + 2.5);
+                shape.bezierCurveTo(x + 2.5*Math.random(), y + 2.5, x + 2, y, x, y);
+                shape.bezierCurveTo(x - 3, y, x - 3, y + 3.5, x - 3, y + 3.5);
+                shape.bezierCurveTo(x - 3, y + 5.5, x - 1.5, y + 7.7, x + 2.5, y + 9.5);
+                shape.bezierCurveTo(x + 6, y + 7.7, x + 8, y + 4.5, x + 8, y + 3.5);
+                shape.bezierCurveTo(x + 8, y + 3.5, x + 8, y, x + 5, y);
+                shape.bezierCurveTo(x + 3.5, y, x + 2.5, y + 2.5, x + 2.5, y + 2.5);
+            
+                addSolidGeometry(1, 0, i, new THREE.ShapeGeometry(shape));
+            
+            }
+            // Geometry for sphere
+            {
+                const radius = 7;
+                const widthSegments = 12;
+                const heightSegments = 8;
+                addSolidGeometry(2, 0, i, new THREE.SphereGeometry(radius*Math.random(), widthSegments, heightSegments));
+            }
+            // Geomtery for Tetrahedron
+            {
+                const radius = 7;
+                addSolidGeometry(-2, -1, i, new THREE.TetrahedronGeometry(radius*Math.random()));
+            }
+            // Geometry for fonts
+            {
+                const loader = new FontLoader();
+                // promisify font loading
+                function loadFont(url) {
+                    return new Promise((resolve, reject) => {
+                        loader.load(url, resolve, undefined, reject);
+                    });
+                }
+
+                async function doit() {
+                    const font = await loadFont('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json');  /* threejsfundamentals: url */
+                
+                    const geometry = new TextGeometry('three.js', {
+                        font: font,
+                        size: 3.0*Math.random(),
+                        height: .2,
+                        curveSegments: 12,
+                        bevelEnabled: true,
+                        bevelThickness: 0.5,
+                        bevelSize: .3,
+                        bevelSegments: 5,
+                    });
+                    const mesh = new THREE.Mesh(geometry, createMaterial());
+                    geometry.computeBoundingBox();
+                    geometry.boundingBox.getCenter(mesh.position).multiplyScalar(-1);
+
+                    const parent = new THREE.Object3D();
+                    parent.add(mesh);
+
+                    addObject(-1, -1, i, parent);
+                }
+                doit();
+            }
+            // Geometry for Torus
+            {
+                const radius = 5;
+                const tubeRadius = 2;
+                const radialSegments = 8;
+                const tubularSegments = 24;
+                addSolidGeometry(0, -1, i, new THREE.TorusGeometry(radius*Math.random(), tubeRadius, radialSegments, tubularSegments));
+            }
+            // Geometry for Torusknot
+            {
+                const radius = 3.5;
+                const tube = 1.5;
+                const radialSegments = 8;
+                const tubularSegments = 64;
+                const p = 2;
+                const q = 3;
+                addSolidGeometry(1, -1, i, new THREE.TorusKnotGeometry(radius, tube*Math.random(), tubularSegments, radialSegments, p, q));
+            }
+            // Geometry for Tube
+            {
+                class CustomSinCurve extends THREE.Curve {
+                    constructor(scale) {
+                        super();
+                        this.scale = scale;
+                    }
+                    getPoint(t) {
+                        const tx = t * 3 - 1.5;
+                        const ty = Math.sin(2 * Math.PI * t);
+                        const tz = 0;
+                        return new THREE.Vector3(tx, ty, tz).multiplyScalar(this.scale);
+                    }
+                }
+
+                const path = new CustomSinCurve(4);
+                const tubularSegments = 20;
+                const radius = 1;
+                const radialSegments = 8;
+                const closed = false;
+                addSolidGeometry(2, -1, i, new THREE.TubeGeometry(path, tubularSegments, radius*Math.random(), radialSegments, closed));
+            }
+            // Geometry for Wireframe box
+            {
+                const width = 8;
+                const height = 8;
+                const depth = 8;
+                const thresholdAngle = 15;
+                addLineGeometry(-1, -2, i, new THREE.EdgesGeometry(
+                    new THREE.BoxGeometry(width*Math.random(), height, depth),
+                    thresholdAngle));
+            }
+            // Geometry for Wire frame box geometry
+            {
+                const width = 8;
+                const height = 8;
+                const depth = 8;
+                addLineGeometry(1, -2, i, new THREE.WireframeGeometry(new THREE.BoxGeometry(width*Math.random(), height, depth)));
+            }
+        }
+
+        // cross based wall
+        {
+            // create a vector for cross
+            const points = [];
+            points.push( new THREE.Vector3( -1,  0,  0 ) );
+            points.push( new THREE.Vector3(  1,  0,  0 ) );
+            points.push( new THREE.Vector3(  0,  0,  0 ) );
+            points.push( new THREE.Vector3(  0, -1,  0 ) );
+            points.push( new THREE.Vector3(  0,  1,  0 ) );
+            
+            // create 100 x 100 cross 
+            for(var i = 0; i <100; i++){
+                for( var j=0; j < 100; j++){
+                    addWall(i-50, j-50, -3, new THREE.BufferGeometry().setFromPoints( points ));
+                }
+            }
+        }
+
+        requestAnimationFrame(render);
+    }
+
+    function setScissorForElement(elem) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const elemRect = elem.getBoundingClientRect();
+        
+        // compute a canvas relative rectangle
+        const right = Math.min(elemRect.right, canvasRect.right) - canvasRect.left;
+        const left = Math.max(0, elemRect.left - canvasRect.left);
+        const bottom = Math.min(elemRect.bottom, canvasRect.bottom) - canvasRect.top;
+        const top = Math.max(0, elemRect.top - canvasRect.top);
+        
+        const width = Math.min(canvasRect.width, right - left);
+        const height = Math.min(canvasRect.height, bottom - top);
+        
+        // setup the scissor to only render to that part of the canvas
+        const positiveYUpBottom = canvasRect.height - bottom;
+        renderer.setScissor(left, positiveYUpBottom, width, height);
+        renderer.setViewport(left, positiveYUpBottom, width, height);
+        
+        // return the aspect
+        return width / height;
+    }
+
+    function addObject(x, y, z=0, obj) {
+        obj.position.x = x * spread;
+        obj.position.y = y * spread;
+        obj.position.z = z * spread;
+
+        scene.add(obj);
+        objects.push(obj);
+    }
+
+    function addWall(x, y, z=0, geometry) {
+        var dist = Math.sqrt(x * x + y * y);
+        let radius = 20;
+
+        const material = new THREE.LineBasicMaterial({
+            color: 0xFFFFFF,
+            opacity: (radius - dist)/radius,
+            transparent: true
+        });
+        
+        const obj = new THREE.Line(geometry, material);
+        obj.position.x = x * 5;
+        obj.position.y = y * 5;
+        obj.position.z = z * 5;
+        scene.add(obj);
+    }
+
+    function createMaterial() {
+        const material = new THREE.MeshPhongMaterial({
+            side: THREE.DoubleSide,
+        });
+
+        const hue = Math.random();
+        const saturation = 1;
+        const luminance = .5;
+        material.color.setHSL(hue, saturation, luminance);
+
+        return material;
+    }
+
+    function addSolidGeometry(x, y, z=0, geometry) {
+        const mesh = new THREE.Mesh(geometry, createMaterial());
+        addObject(x, y, z, mesh);
+    }
+
+    function addLineGeometry(x, y, z=0, geometry) {
+        const material = new THREE.LineBasicMaterial({ color: 0xFF0000 });
+        const mesh = new THREE.LineSegments(geometry, material);
+        addObject(x, y, z, mesh);
+    }
+
+    // Resize the renderer to display size
+    function resizeRendererToDisplaySize(renderer) {
+        const canvas = renderer.domElement;
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        const needResize = canvas.width !== width || canvas.height !== height;
+        if (needResize) {
+            renderer.setSize(width, height, false);
+        }
+        return needResize;
+    }
+
+    function render(time) {
+        time *= 0.001;
+        control.update(time);
+        control2.update();
+
+        if (resizeRendererToDisplaySize(renderer)) {
+            const canvas = renderer.domElement;
+            camera.aspect = canvas.clientWidth / canvas.clientHeight;
+            camera.updateProjectionMatrix();
+        }
+
+        objects.forEach((obj, ndx) => {
+            const speed = .1 + ndx * .05;
+            const rot = time * speed;
+            obj.rotation.x = rot;
+            obj.rotation.y = rot;
+        });
+        
+        
+        //adding movements for view
+
+        // turn on the scissor
+        renderer.setScissorTest(true);
+    
+        // render the original view
+        {
+            const aspect = setScissorForElement(view1Elem);
+        
+            // adjust the camera for this aspect
+            camera.aspect = aspect;
+            camera.updateProjectionMatrix();
+        
+            scene.background.set(0x000000);
+        
+            // render
+            renderer.render(scene, camera);
+        }
+    
+        // render from the 2nd camera
+        {
+            const aspect = setScissorForElement(view2Elem);
+        
+            // adjust the camera for this aspect
+            camera2.aspect = aspect;
+            camera2.updateProjectionMatrix();
+        
+            scene.background.set(0x000040);
+        
+            renderer.render(scene, camera2);
+        }
+        
+
+        requestAnimationFrame(render);
+    }
+
+</script>
+
+</html>
